@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "643161489570",
+    "project_id": "munaytrip-c3545",
+    "storage_bucket": "munaytrip-c3545.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:643161489570:android:da80513f8bb01a10e597fb",
+        "android_client_info": {
+          "package_name": "com.dsm.munaytripandroid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3uRjYi806T2mJrfY5l3_R5rvWGgcVLzw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
