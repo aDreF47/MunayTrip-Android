@@ -1,8 +1,8 @@
 #  MunyaTrip – Plataforma de Turismo 
 
-> **"Descubre Cusco como nunca antes: experiencias auténticas, locales y con sentido."**
+> **"Descubre Perú como nunca antes: experiencias auténticas, locales y con sentido."**
 
-[![License](https://img.shields.io/badge/license-MIT-blue)](https://choosealicense.com/licenses/mit/)
+[![License](https://img.shields.io/badge/license-MIT-blue )](LICENSE)
 
 ## 🔍 Descripción
 
@@ -240,11 +240,10 @@ munyatrip/
 | **Analítica** | Firebase Analytics, Crashlytics |
 | **Imagenes** | Glide (cache), Firebase Storage |
 | **Arquitectura** | Clean Architecture, Repository Pattern, Hilt |
-| **Versionado** | Git, GitHub Actions |
 
 ---
 
-## 🚀 Cómo Contribuir
+## Cómo Contribuir
 
 1. Fork este repositorio.
 2. Crea una rama nueva (`feature/new-feature`).
@@ -255,11 +254,10 @@ munyatrip/
 
 ## 📄 Licencia
 
-Este proyecto está bajo licencia **MIT** — vea el archivo [LICENSE](https://choosealicense.com/licenses/mit/) para más detalles.
-
+Este proyecto está bajo licencia **MIT** — vea el archivo [LICENSE](LICENSE) para más detalles.
 ---
 
-## 📬 Contacto
+## Contacto
 
 Para sugerencias, reportar errores o colaborar:
 

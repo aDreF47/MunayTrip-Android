@@ -1,0 +1,410 @@
+{
+  "users": {
+    "usr_turista_001": {
+      "user_id": "usr_turista_001",
+      "email": "fernando.rojas@gmail.com",
+      "user_type": "tourist",
+      "estado": "activo",
+      "profile_image_url": "gs://munaytrip-app.appspot.com/users/avatars/usr_turista_001/profile.jpg",
+      "created_at": {
+        "_seconds": 1717200000,
+        "_nanoseconds": 0
+      }
+    },
+    "usr_provider_001": {
+      "user_id": "usr_provider_001",
+      "email": "contacto@municusco.gob.pe",
+      "user_type": "provider",
+      "estado": "activo",
+      "profile_image_url": "gs://munaytrip-app.appspot.com/users/avatars/usr_provider_001/profile.jpg",
+      "created_at": {
+        "_seconds": 1717200000,
+        "_nanoseconds": 0
+      }
+    },
+    "usr_provider_002": {
+      "user_id": "usr_provider_002",
+      "email": "reservas@hotelcusco.com",
+      "user_type": "provider",
+      "estado": "activo",
+      "profile_image_url": "gs://munaytrip-app.appspot.com/users/avatars/usr_provider_002/profile.jpg",
+      "created_at": {
+        "_seconds": 1717286400,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "tourists": {
+    "usr_turista_001": {
+      "tourist_id": "usr_turista_001",
+      "nombre": "Fernando Rojas",
+      "preferencias": [
+        "cultura",
+        "gastronomia",
+        "naturaleza"
+      ],
+      "puntos": 275,
+      "nivel": 2,
+      "badges": [
+        "explorador",
+        "foodie"
+      ],
+      "avatar_url": "gs://munaytrip-app.appspot.com/users/avatars/usr_turista_001/avatar_512.jpg",
+      "ubicacion_actual": {
+        "_latitude": -12.0464,
+        "_longitude": -77.0428
+      }
+    }
+  },
+  "providers": {
+    "usr_provider_001": {
+      "provider_id": "usr_provider_001",
+      "nombre": "Municipalidad del Cusco",
+      "tipo": "municipalidad",
+      "categoria": "cultural",
+      "ubicacion": {
+        "_latitude": -13.5319,
+        "_longitude": -71.9675
+      },
+      "contacto": "+51984224567",
+      "logo_url": "gs://munaytrip-app.appspot.com/providers/logos/usr_provider_001/logo_512.png",
+      "banner_url": "gs://munaytrip-app.appspot.com/providers/banners/usr_provider_001/banner_1920x800.jpg"
+    },
+    "usr_provider_002": {
+      "provider_id": "usr_provider_002",
+      "nombre": "Hotel Machu Picchu Inn",
+      "tipo": "hotel",
+      "categoria": "hospedaje",
+      "ubicacion": {
+        "_latitude": -13.5320,
+        "_longitude": -71.9680
+      },
+      "contacto": "+51984567890",
+      "logo_url": "gs://munaytrip-app.appspot.com/providers/logos/usr_provider_002/logo_512.png",
+      "banner_url": "gs://munaytrip-app.appspot.com/providers/banners/usr_provider_002/banner_1920x800.jpg"
+    }
+  },
+  "offers": {
+    "ofr_feria_artesanal_2025": {
+      "offer_id": "ofr_feria_artesanal_2025",
+      "provider_id": "usr_provider_001",
+      "titulo": "Feria Artesanal de la Confraternidad",
+      "descripcion_corta": "Encuentro cultural con artesanos locales, música en vivo y degustaciones.",
+      "descripcion_larga": "<p>Únete a nuestra feria mensual donde más de 50 artesanos exponen sus creaciones. Habrá talleres gratuitos de cerámica y tejido, además de presentaciones de danzas típicas cada hora.</p><p>Ideal para toda la familia, con área de juegos para niños y food trucks con comida tradicional cusqueña.</p>",
+      "categoria": "cultural",
+      "etiquetas": [
+        "gratis",
+        "familia",
+        "vivo",
+        "tradicional",
+        "artesania"
+      ],
+      "ubicacion": {
+        "lat": -13.5319,
+        "lng": -71.9675,
+        "nombre": "Plazoleta de las Artes",
+        "direccion": "Plazoleta de las Artes, Centro Histórico, Cusco"
+      },
+      "duracion": "Todo el día",
+      "horarios": [
+        {
+          "dia": "sabado",
+          "hora_inicio": "10:00",
+          "hora_fin": "18:00"
+        }
+      ],
+      "precio": 0.0,
+      "es_gratis": true,
+      "capacidad_maxima": 500,
+      "cupos_disponibles": 420,
+      "incluye": [
+        "Acceso libre",
+        "Talleres gratuitos",
+        "Show artístico",
+        "Área infantil"
+      ],
+      "recomendaciones": [
+        "Llevar sombrero",
+        "Hidratarse",
+        "Llegar temprano",
+        "Traer efectivo para compras"
+      ],
+      "descuento": 0,
+      "images_urls": [
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_feria_artesanal_2025/main_1920x1080.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_feria_artesanal_2025/artesanos_1920x1080.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_feria_artesanal_2025/talleres_1920x1080.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_feria_artesanal_2025/danzas_1920x1080.jpg"
+      ],
+      "thumbnail_urls": [
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_feria_artesanal_2025/main_400x300.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_feria_artesanal_2025/artesanos_400x300.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_feria_artesanal_2025/talleres_400x300.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_feria_artesanal_2025/danzas_400x300.jpg"
+      ],
+      "tipo_oferta": "event",
+      "requiere_confirmacion": false,
+      "instrucciones_pago": "Gratuito - Solo registro de asistencia",
+      "created_at": {
+        "_seconds": 1717286400,
+        "_nanoseconds": 0
+      }
+    },
+    "ofr_hotel_room_cusco": {
+      "offer_id": "ofr_hotel_room_cusco",
+      "provider_id": "usr_provider_002",
+      "titulo": "Habitación Matrimonial Vista a la Plaza",
+      "descripcion_corta": "Habitación cómoda en el corazón del Centro Histórico con vista panorámica.",
+      "descripcion_larga": "<p>Hermosa habitación matrimonial ubicada en pleno centro histórico del Cusco, a solo 2 cuadras de la Plaza de Armas.</p><p>Incluye desayuno buffet, WiFi gratuito, agua caliente 24h y servicio de conserjería. Vista privilegiada a la plaza principal.</p>",
+      "categoria": "hospedaje",
+      "etiquetas": [
+        "confortable",
+        "centrico",
+        "vista",
+        "desayuno"
+      ],
+      "ubicacion": {
+        "lat": -13.5320,
+        "lng": -71.9680,
+        "nombre": "Hotel Machu Picchu Inn",
+        "direccion": "Jr. Ruinas 472, Centro Histórico, Cusco"
+      },
+      "duracion": "Por noche",
+      "horarios": [
+        {
+          "dia": "todos",
+          "hora_inicio": "14:00",
+          "hora_fin": "12:00"
+        }
+      ],
+      "precio": 120.00,
+      "es_gratis": false,
+      "capacidad_maxima": 2,
+      "cupos_disponibles": 1,
+      "incluye": [
+        "Habitación matrimonial",
+        "Desayuno buffet",
+        "WiFi gratuito",
+        "Servicio 24h"
+      ],
+      "recomendaciones": [
+        "Reservar con anticipación",
+        "Confirmar hora de llegada",
+        "Llevar documento de identidad"
+      ],
+      "descuento": 10,
+      "images_urls": [
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_hotel_room_cusco/habitacion_principal_1920x1080.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_hotel_room_cusco/vista_plaza_1920x1080.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_hotel_room_cusco/baño_moderno_1920x1080.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_hotel_room_cusco/desayuno_buffet_1920x1080.jpg"
+      ],
+      "thumbnail_urls": [
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_hotel_room_cusco/habitacion_principal_400x300.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_hotel_room_cusco/vista_plaza_400x300.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_hotel_room_cusco/baño_moderno_400x300.jpg",
+        "gs://munaytrip-app.appspot.com/offers/images/ofr_hotel_room_cusco/desayuno_buffet_400x300.jpg"
+      ],
+      "tipo_oferta": "reservation",
+      "requiere_confirmacion": true,
+      "instrucciones_pago": "50% anticipo por transferencia, saldo en efectivo al check-in",
+      "created_at": {
+        "_seconds": 1717372800,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "bookings": {
+    "bk_fer_001": {
+      "booking_id": "bk_fer_001",
+      "tourist_id": "usr_turista_001",
+      "offer_id": "ofr_feria_artesanal_2025",
+      "fecha_reserva": {
+        "_seconds": 1717372800,
+        "_nanoseconds": 0
+      },
+      "fecha_uso": {
+        "_seconds": 1718409600,
+        "_nanoseconds": 0
+      },
+      "estado": "confirmado",
+      "tipo_reserva": "attendance",
+      "cantidad_personas": 2,
+      "metodo_pago": "gratuito",
+      "estado_pago": "no_aplica",
+      "anticipo_requerido": false,
+      "monto_anticipo": 0.0,
+      "notas_especiales": "Interesados en taller de cerámica y área infantil",
+      "created_at": {
+        "_seconds": 1717372800,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "reviews": {
+    "rvw_fer_001": {
+      "review_id": "rvw_fer_001",
+      "booking_id": "bk_fer_001",
+      "tourist_id": "usr_turista_001",
+      "offer_id": "ofr_feria_artesanal_2025",
+      "rating": 5,
+      "comentario": "Increíble ambiente familiar y cultural. Los artesanos son muy talentosos y amables. Mi hija disfrutó mucho el área infantil y los talleres gratuitos. ¡Definitivamente volveremos el próximo mes!",
+      "aspectos": {
+        "organizacion": 5,
+        "variedad": 5,
+        "amabilidad": 5,
+        "limpieza": 4,
+        "accesibilidad": 5
+      },
+      "review_images": [
+        "gs://munaytrip-app.appspot.com/reviews/photos/rvw_fer_001/ceramica_terminada.jpg",
+        "gs://munaytrip-app.appspot.com/reviews/photos/rvw_fer_001/familia_taller.jpg"
+      ],
+      "util": true,
+      "respondido": true,
+      "respuesta_proveedor": "¡Muchas gracias Fernando! Nos alegra saber que disfrutaron en familia. Los esperamos en la próxima feria con nuevas sorpresas.",
+      "fecha_respuesta": {
+        "_seconds": 1718582400,
+        "_nanoseconds": 0
+      },
+      "created_at": {
+        "_seconds": 1718496000,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "favorites": {
+    "fav_001": {
+      "favorite_id": "fav_001",
+      "tourist_id": "usr_turista_001",
+      "offer_id": "ofr_hotel_room_cusco",
+      "categoria": "hospedaje",
+      "timestamp": {
+        "_seconds": 1717545600,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "interactions": {
+    "int_001": {
+      "interaction_id": "int_001",
+      "user_id": "usr_turista_001",
+      "offer_id": "ofr_feria_artesanal_2025",
+      "tipo": "view",
+      "metadata": {
+        "source": "search_results",
+        "search_term": "eventos culturales cusco",
+        "position": 1,
+        "time_spent": 45,
+        "images_viewed": [
+          "main_1920x1080.jpg",
+          "artesanos_1920x1080.jpg"
+        ]
+      },
+      "session_id": "sess_fer_20240601_001",
+      "timestamp": {
+        "_seconds": 1717372200,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "provider_analytics": {
+    "analytics_001": {
+      "analytics_id": "analytics_001",
+      "provider_id": "usr_provider_001",
+      "offer_id": "ofr_feria_artesanal_2025",
+      "total_views": 1250,
+      "total_clicks": 340,
+      "total_bookings": 45,
+      "total_attendance": 42,
+      "total_interest": 0,
+      "conversion_rate": 13.24,
+      "image_engagement": {
+        "total_image_views": 4200,
+        "avg_time_per_image": 8.5,
+        "most_viewed_image": "main_1920x1080.jpg"
+      },
+      "top_search_terms": [
+        "feria artesanal cusco",
+        "eventos gratuitos",
+        "confraternidad"
+      ],
+      "peak_hours": [
+        10,
+        11,
+        14,
+        15,
+        16
+      ],
+      "period": "monthly",
+      "last_updated": {
+        "_seconds": 1717632000,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "notifications": {
+    "notif_001": {
+      "notification_id": "notif_001",
+      "user_id": "usr_turista_001",
+      "title": "¡Reserva confirmada! 📸",
+      "body": "Tu registro para la Feria Artesanal está confirmado. ¡Te esperamos el sábado!",
+      "type": "attendance_confirm",
+      "data": {
+        "offer_id": "ofr_feria_artesanal_2025",
+        "booking_id": "bk_fer_001",
+        "image_url": "gs://munaytrip-app.appspot.com/offers/images/ofr_feria_artesanal_2025/main_400x300.jpg",
+        "deep_link": "munaytrip://booking/bk_fer_001",
+        "action": "view_booking_details"
+      },
+      "is_read": true,
+      "sent_at": {
+        "_seconds": 1717372900,
+        "_nanoseconds": 0
+      },
+      "delivered_at": {
+        "_seconds": 1717372905,
+        "_nanoseconds": 0
+      },
+      "read_at": {
+        "_seconds": 1717373200,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "storage_metadata": {
+    "upload_sessions": {
+      "sess_upload_001": {
+        "session_id": "sess_upload_001",
+        "user_id": "usr_provider_001",
+        "offer_id": "ofr_feria_artesanal_2025",
+        "uploaded_files": [
+          {
+            "filename": "feria_main.jpg",
+            "original_size": "2.4MB",
+            "processed_sizes": [
+              "1920x1080",
+              "800x600",
+              "400x300"
+            ],
+            "storage_path": "offers/images/ofr_feria_artesanal_2025/",
+            "upload_date": "2024-06-01T10:30:00Z",
+            "processing_status": "completed"
+          },
+          {
+            "filename": "artesanos_trabajo.jpg",
+            "original_size": "1.8MB",
+            "processed_sizes": [
+              "1920x1080",
+              "800x600",
+              "400x300"
+            ],
+            "storage_path": "offers/images/ofr_feria_artesanal_2025/",
+            "upload_date": "2024-06-01T10:32:00Z",
+            "processing_status": "completed"
+          }
+        ]
+      }
+    }
+  }
+}
