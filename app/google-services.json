@@ -12,7 +12,20 @@
           "package_name": "com.dsm.munaytripandroid"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "643161489570-u421q7gfqp0q4329pnhp30ll0qj5p0lp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dsm.munaytripandroid",
+            "certificate_hash": "73fd1a698b1fd287af8f8e06bb743bdbe603e943"
+          }
+        },
+        {
+          "client_id": "643161489570-ahkmt26jj313h951lj0dtqiu4j13mvnd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC3uRjYi806T2mJrfY5l3_R5rvWGgcVLzw"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "643161489570-ahkmt26jj313h951lj0dtqiu4j13mvnd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
