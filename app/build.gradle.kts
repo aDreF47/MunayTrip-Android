@@ -66,7 +66,7 @@ dependencies {
     //implementation("com.google.firebase:firebase-messaging")
 
     // Cloud Storage para Firebase
-    implementation("com.google.firebase:firebase-storage")
+    // implementation("com.google.firebase:firebase-storage")
 
     // Firebase Analytics (para tracking de comportamiento y recomendaciones)
     implementation("com.google.firebase:firebase-analytics")

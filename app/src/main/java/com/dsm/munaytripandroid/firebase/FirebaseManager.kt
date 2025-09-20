@@ -5,14 +5,14 @@ package com.dsm.munaytripandroid.firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
-import com.google.firebase.storage.FirebaseStorage
+//import com.google.firebase.storage.FirebaseStorage
 
 object FirebaseManager {
 
     // ✅ Instancias principales
     val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
-    val storage: FirebaseStorage by lazy { FirebaseStorage.getInstance() }
+    //val storage: FirebaseStorage by lazy { FirebaseStorage.getInstance() }
 
     // ✅ Referencias frecuentes a colecciones
     val usersCollection get() = firestore.collection("users")
