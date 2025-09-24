@@ -1,4 +1,4 @@
-package com.dsm.munaytripandroid.core.theme
+package com.dsm.munaytripandroid.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

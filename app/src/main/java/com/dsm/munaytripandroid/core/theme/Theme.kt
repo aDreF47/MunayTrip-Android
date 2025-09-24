@@ -1,4 +1,4 @@
-package com.dsm.munaytripandroid.core.theme
+package com.dsm.munaytripandroid.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

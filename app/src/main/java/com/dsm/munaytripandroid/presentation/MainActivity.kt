@@ -11,7 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.dsm.munaytripandroid.core.theme.MunayTripAndroidTheme
+import androidx.navigation.compose.rememberNavController
+import com.dsm.munaytripandroid.core.navigation.NavGraph
+import com.dsm.munaytripandroid.ui.theme.MunayTripAndroidTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,10 +22,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             MunayTripAndroidTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    val navController = rememberNavController()
+                    NavGraph(navController = navController)
                 }
             }
         }

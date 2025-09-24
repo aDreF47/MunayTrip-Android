@@ -1,0 +1,16 @@
+package com.dsm.munaytripandroid.presentation.home.ui
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+@Composable
+fun DetailScreen(itemId: String) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text("Detalle del item con ID: $itemId")
+    }
+}

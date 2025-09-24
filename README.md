@@ -122,15 +122,29 @@ graph TD
 ## Estructura de Directorios
 
 ```
-munyatrip/
+MunayTripAndroid/
 ├── app/
-│   ├── src/main/
-│   │   ├── java/com/munyatrip/
-│   │   │   ├── ui/                  # Activities, Fragments, Adapters
+│   ├── src/main/java/
+│   │   ├── com/dsm/munaytripndroid/
+│   │   │   ├── core/
+│   │   │   │   ├── di/ 
+│   │   │   │   ├── navigation/ 
+│   │   │   │   ├── theme/
+│   │   │   │   │   ├── Color.kt
+│   │   │   │   │   ├── Theme.kt
+│   │   │   │   │   └── Type.kt 
+│   │   │   │   └── utils/                
 │   │   │   ├── data/                # Repositories, Models, Managers
 │   │   │   ├── domain/              # Entidades de negocio (DTOs)
-│   │   │   ├── utils/               # Helpers, Utils
-│   │   │   ├── di/                  # Dagger Hilt / Dependency Injection
+│   │   │   ├── presenttion/
+│   │   │   │   ├── auth/              
+│   │   │   │   │   ├── ui/              
+│   │   │   │   │   └── viewmodel/
+│   │   │   │   ├── home/              
+│   │   │   │   │   ├── ui/              
+│   │   │   │   │   └── viewmodel/
+│   │   │   │   ├── splash/              
+│   │   │   │   ├── .../                          
 │   │   │   └── BuildConfig.java
 │   ├── res/
 │   │   ├── drawable/                 # Iconos, imágenes
