@@ -41,6 +41,8 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.androidx.core.splashscreen)
     //Te permite declarar un NavHost con todas tus rutas y moverte entre pantallas usando un NavController.
     implementation(libs.androidx.navigation.compose)
 
