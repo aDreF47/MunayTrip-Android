@@ -28,7 +28,7 @@ fun SplashScreen(navController: NavController) {
                 popUpTo(Destinations.SPLASH) { inclusive = true }
             }
         } else {
-            navController.navigate(Destinations.AUTH) {
+            navController.navigate(Destinations.LOGIN) {
                 popUpTo(Destinations.SPLASH) { inclusive = true }
             }
         }
