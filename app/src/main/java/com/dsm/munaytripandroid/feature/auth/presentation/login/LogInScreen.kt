@@ -1,4 +1,4 @@
-package com.dsm.munaytripandroid.presentation.auth.ui
+package com.dsm.munaytripandroid.feature.auth.presentation.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*

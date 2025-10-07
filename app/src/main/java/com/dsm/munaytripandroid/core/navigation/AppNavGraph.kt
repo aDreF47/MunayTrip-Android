@@ -5,10 +5,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import com.dsm.munaytripandroid.presentation.splash.ui.SplashScreen
-import com.dsm.munaytripandroid.presentation.auth.ui.LogInScreen
-import com.dsm.munaytripandroid.presentation.home.ui.HomeScreen
-import com.dsm.munaytripandroid.presentation.initial.ui.InitialScreen
+import com.dsm.munaytripandroid.feature.splash.presentation.SplashScreen
+import com.dsm.munaytripandroid.feature.auth.presentation.login.LogInScreen
+import com.dsm.munaytripandroid.feature.home.presentation.HomeScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable

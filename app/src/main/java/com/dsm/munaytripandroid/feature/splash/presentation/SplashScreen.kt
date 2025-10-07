@@ -1,4 +1,4 @@
-package com.dsm.munaytripandroid.presentation.splash.ui
+package com.dsm.munaytripandroid.feature.splash.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*

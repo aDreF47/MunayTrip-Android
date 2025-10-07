@@ -1,4 +1,4 @@
-package com.dsm.munaytripandroid.presentation.home.ui
+package com.dsm.munaytripandroid.feature.home.presentation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
