@@ -1,23 +1,16 @@
-package com.dsm.munaytripandroid.presentation
+package com.dsm.munaytripandroid
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.dsm.munaytripandroid.core.navigation.AppNavGraph
-import com.dsm.munaytripandroid.presentation.initial.ui.InitialScreen
 import com.dsm.munaytripandroid.ui.theme.MunayTripAndroidTheme
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -46,10 +39,10 @@ class MainActivity : ComponentActivity() {
             navController = rememberNavController()
             MunayTripAndroidTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.Companion.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                   AppNavGraph(navController = navController, auth)
+                    AppNavGraph(navController = navController, auth)
                 }
             }
         }

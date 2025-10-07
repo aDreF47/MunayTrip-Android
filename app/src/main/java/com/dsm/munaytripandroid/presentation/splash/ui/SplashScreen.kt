@@ -19,7 +19,7 @@ import com.dsm.munaytripandroid.R
 fun SplashScreen(navController: NavController) {
     // Simulación de delay y chequeo de login
     LaunchedEffect(Unit) {
-        delay(2000) // 2 segundos de splash
+        delay(5000) // 2 segundos de splash
 
         val isLoggedIn = false // aquí luego conectarás con tu sesión real
 
@@ -28,7 +28,7 @@ fun SplashScreen(navController: NavController) {
                 popUpTo(Destinations.SPLASH) { inclusive = true }
             }
         } else {
-            navController.navigate(Destinations.LOGIN) {
+            navController.navigate("auth_graph")  {
                 popUpTo(Destinations.SPLASH) { inclusive = true }
             }
         }
@@ -46,7 +46,7 @@ fun SplashScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Munay Trip",
+                text = "Munay Trippp",
                 style = MaterialTheme.typography.headlineMedium
             )
             Text(

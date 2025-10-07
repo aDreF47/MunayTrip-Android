@@ -11,11 +11,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.dsm.munaytripandroid.R
 
 @Preview
 @Composable
-fun LogInScreen() {
+fun LogInScreen(navController: NavHostController) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
