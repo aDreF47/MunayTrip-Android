@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.jetbrainsKotlinSerialization)
 }
 
 android {
@@ -41,6 +42,8 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.core.splashscreen)
     //Te permite declarar un NavHost con todas tus rutas y moverte entre pantallas usando un NavController.

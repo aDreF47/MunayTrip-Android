@@ -10,7 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.dsm.munaytripandroid.core.navigation.AppNavGraph
+import com.dsm.munaytripandroid.core.navigation.AppNavigation
 import com.dsm.munaytripandroid.ui.theme.MunayTripAndroidTheme
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.Companion.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavGraph(navController = navController, auth)
+                    AppNavigation(navController = navController, auth)
                 }
             }
         }
