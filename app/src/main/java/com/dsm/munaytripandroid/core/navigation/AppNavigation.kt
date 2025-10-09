@@ -68,6 +68,7 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
         // ========== REGISTER SCREEN ==========
         composable<Register> {
             RegisterScreen(
+                auth,
                 onRegisterSuccess = {
                     navController.navigate(Home) {
                         popUpTo(Initial) { inclusive = true }
