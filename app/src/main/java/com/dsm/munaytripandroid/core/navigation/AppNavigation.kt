@@ -80,10 +80,16 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
             )
         }
 
-        // ========== HOME (Placeholder) ==========
+        // ========== HOME SCREEN ==========
         composable<Home> {
-            // Tu HomeScreen aquí
-            HomeScreen()
+            HomeScreen(
+                auth = auth,
+                onLogout = {
+                    navController.navigate(Initial) {
+                        popUpTo(Home) { inclusive = true } // ✅ Limpia la pila hasta Home
+                    }
+                }
+            )
         }
     }
 }
