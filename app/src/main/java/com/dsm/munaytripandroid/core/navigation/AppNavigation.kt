@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import com.dsm.munaytripandroid.feature.onboarding.presentation.splash.SplashScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.login.LoginScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.register.RegisterScreen
+import com.dsm.munaytripandroid.feature.home.presentation.HomeScreen
 import com.dsm.munaytripandroid.feature.onboarding.presentation.initial.InitialScreen
 import com.google.firebase.auth.FirebaseAuth
 
@@ -16,7 +17,7 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
     // startDestination: El primer destino que ve el usuario
     NavHost(
         navController = navController,
-        startDestination = Splash // Destino de inicio FIJO (Google recomienda)
+        startDestination = Splash
     ) {
         // ========== SPLASH SCREEN ==========
         composable<Splash> {
@@ -51,6 +52,7 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
         // ========== LOGIN SCREEN ==========
         composable<Login> {
             LoginScreen(
+                auth,
                 onLoginSuccess = {
                     navController.navigate(Home) {
                         // Eliminar toda la pila hasta Initial
@@ -80,6 +82,7 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
         // ========== HOME (Placeholder) ==========
         composable<Home> {
             // Tu HomeScreen aquí
+            HomeScreen()
         }
     }
 }

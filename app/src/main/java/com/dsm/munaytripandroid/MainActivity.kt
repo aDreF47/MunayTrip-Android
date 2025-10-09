@@ -22,18 +22,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-//        val splashScreen = installSplashScreen()
-
         super.onCreate(savedInstanceState)
-
         auth = Firebase.auth
-//        // Ejemplo: Mantener Splash hasta que termine una condición (ej: cargando datos iniciales)
-//        var keepOnScreen = true
-//        splashScreen.setKeepOnScreenCondition { keepOnScreen }
-//
-//        // Aquí simulo que la app ya está lista (puedes reemplazar con un ViewModel)
-//        keepOnScreen = false
         enableEdgeToEdge()
         setContent {
             navController = rememberNavController()

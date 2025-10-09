@@ -1,23 +1,39 @@
 package com.dsm.munaytripandroid.feature.onboarding.presentation.splash
 
+//import androidx.lifecycle.ViewModel
+//import com.dsm.munaytripandroid.feature.auth.domain.repository.AuthRepository
+//
+//class SplashViewModel(
+//    private val authRepository: AuthRepository
+//) : ViewModel() {
+//
+//    /**
+//     * Verifica si el usuario tiene una sesión activa
+//     * Ahora con Firebase real
+//     */
+//    suspend fun checkUserSession(): Boolean {
+//        return authRepository.isUserLoggedIn()
+//    }
+//}
+
+
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.dsm.munaytripandroid.feature.auth.data.remote.FirebaseAuthDataSource
+import com.dsm.munaytripandroid.feature.auth.data.repository.AuthRepositoryImpl
+import com.dsm.munaytripandroid.feature.auth.domain.repository.AuthRepository
 
 class SplashViewModel : ViewModel() {
 
+    // Crear dependencias manualmente (temporal)
+    private val authRepository: AuthRepository = AuthRepositoryImpl(
+        FirebaseAuthDataSource()
+    )
+
     /**
      * Verifica si el usuario tiene una sesión activa
-     * Aquí deberías verificar:
-     * - Token guardado en DataStore/SharedPreferences
-     * - Validez del token
-     * - Estado de autenticación
      */
     suspend fun checkUserSession(): Boolean {
-        // TODO: Implementar verificación real con tu AuthRepository
-        // Por ahora, retorna false (sin sesión)
-        delay(500) // Simular verificación
-        return false
+        return authRepository.isUserLoggedIn()
     }
 }
+
