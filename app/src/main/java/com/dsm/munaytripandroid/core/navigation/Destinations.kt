@@ -15,10 +15,19 @@ object Splash
 object Initial
 
 @Serializable
-object Login
+object Register
 
 @Serializable
-object Register
+object RegisterMail
+
+//@Serializable
+//object RegisterPhone
+//
+//@Serializable
+//object RegisterGoogle
+
+@Serializable
+object Login
 
 @Serializable
 object Home

@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import com.dsm.munaytripandroid.feature.onboarding.presentation.splash.SplashScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.login.LoginScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.register.RegisterScreen
+import com.dsm.munaytripandroid.feature.auth.presentation.register.steps.RegisterMailStepScreen
 import com.dsm.munaytripandroid.feature.home.presentation.HomeScreen
 import com.dsm.munaytripandroid.feature.onboarding.presentation.initial.InitialScreen
 import com.dsm.munaytripandroid.feature.profile.presentation.ProfileScreen
@@ -77,9 +78,40 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
             )
         }
 
+//        fun RegisterScreen(
+//            onNavigateToEmailRegister: () -> Unit,
+//            onNavigateToPhoneRegister: () -> Unit,
+//            onNavigateToGoogleRegister: () -> Unit,
+//            onNavigateToLogin: () -> Unit,
+//            onNavigateBack: () -> Unit
+
         // ========== REGISTER SCREEN ==========
         composable<Register> {
             RegisterScreen(
+                onNavigateToEmailRegister = {
+                    navController.navigate(RegisterMail) {
+                        popUpTo(Register) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToPhoneRegister = {},
+                onNavigateToGoogleRegister = {},
+                onNavigateToLogin = {
+                    navController.navigate(Login) {
+                        popUpTo(Register) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateBack = {
+                    navController.popBackStack() // ✅ igual que arriba
+                },
+
+            )
+        }
+
+        // ===== registerMail ==========
+        composable<RegisterMail> {
+            RegisterMailStepScreen(
                 onRegisterSuccess = {
                     navController.navigate(Home) {
                         popUpTo(Initial) { inclusive = true }
@@ -87,13 +119,7 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                     }
                 },
                 onNavigateBack = {
-                    navController.popBackStack() // ✅ igual que arriba
-                },
-                onNavigateToLogin = {
-                    navController.navigate(Login) {
-                        popUpTo(Register) { inclusive = true }
-                        launchSingleTop = true
-                    }
+                    navController.popBackStack()
                 }
             )
         }

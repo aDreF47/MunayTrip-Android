@@ -1,64 +1,53 @@
 package com.dsm.munaytripandroid.feature.auth.presentation.register
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.sp
+import com.dsm.munaytripandroid.R
 import com.dsm.munaytripandroid.core.presentation.components.MunayTripLogoMedium
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    viewModel: RegisterViewModel = viewModel(),
-    onRegisterSuccess: () -> Unit,
-    onNavigateBack: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onNavigateToEmailRegister: () -> Unit,
+    onNavigateToPhoneRegister: () -> Unit,
+    onNavigateToGoogleRegister: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val registerSuccess by viewModel.registerSuccess.collectAsState()
-
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
-
-    LaunchedEffect(registerSuccess) {
-        if (registerSuccess) {
-            onRegisterSuccess()
-            viewModel.resetRegisterSuccess()
-        }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crear Cuenta") },
+                title = { },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = "Volver",
+                            tint = Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1A7FA6),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    containerColor = Color(0xFF1A7FA6)
                 )
             )
         }
@@ -67,261 +56,219 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState()) // ✅ Scroll vertical
-                .padding(horizontal = 32.dp)
-                .padding(
-                    top = if (isLandscape) 16.dp else 24.dp,
-                    bottom = 32.dp
-                ),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top // Siempre Top porque tiene mucho contenido
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-
-            MunayTripLogoMedium()
-            Text(
-                text = "Se parte de la comunidad MunayTrip",
-                style = if (isLandscape) {
-                    MaterialTheme.typography.headlineSmall
-                } else {
-                    MaterialTheme.typography.headlineMedium
-                },
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A7FA6)
-            )
-
-            Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 32.dp))
-
-            // Nombre completo
-            OutlinedTextField(
-                value = uiState.name,
-                onValueChange = viewModel::onNameChange,
-                label = { Text("Nombre completo") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !uiState.isLoading,
-                isError = uiState.errorMessage?.contains("nombre") == true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF1A7FA6),
-                    focusedLabelColor = Color(0xFF1A7FA6)
-                ),
-                supportingText = {
-                    if (uiState.errorMessage?.contains("nombre") == true) {
-                        Text(
-                            text = uiState.errorMessage ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Email
-            OutlinedTextField(
-                value = uiState.email,
-                onValueChange = viewModel::onEmailChange,
-                label = { Text("Correo electrónico") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !uiState.isLoading,
-                isError = uiState.errorMessage?.contains("correo") == true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF1A7FA6),
-                    focusedLabelColor = Color(0xFF1A7FA6)
-                ),
-                supportingText = {
-                    if (uiState.errorMessage?.contains("correo") == true) {
-                        Text(
-                            text = uiState.errorMessage ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Contraseña
-            OutlinedTextField(
-                value = uiState.password,
-                onValueChange = viewModel::onPasswordChange,
-                label = { Text("Contraseña") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (uiState.isPasswordVisible) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                enabled = !uiState.isLoading,
-                isError = uiState.errorMessage?.contains("contraseña") == true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF1A7FA6),
-                    focusedLabelColor = Color(0xFF1A7FA6)
-                ),
-                supportingText = {
-                    if (uiState.errorMessage?.contains("contraseña") == true) {
-                        Text(
-                            text = uiState.errorMessage ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                },
-                trailingIcon = {
-                    IconButton(onClick = viewModel::togglePasswordVisibility) {
-                        Icon(
-                            imageVector = if (uiState.isPasswordVisible) {
-                                Icons.Default.Visibility
-                            } else {
-                                Icons.Default.VisibilityOff
-                            },
-                            contentDescription = if (uiState.isPasswordVisible) "Ocultar" else "Mostrar",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Confirmar contraseña
-            OutlinedTextField(
-                value = uiState.confirmPassword,
-                onValueChange = viewModel::onConfirmPasswordChange,
-                label = { Text("Confirmar contraseña") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (uiState.isConfirmPasswordVisible) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                enabled = !uiState.isLoading,
-                isError = uiState.errorMessage?.contains("coincidir") == true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF1A7FA6),
-                    focusedLabelColor = Color(0xFF1A7FA6)
-                ),
-                supportingText = {
-                    if (uiState.errorMessage?.contains("coincidir") == true) {
-                        Text(
-                            text = uiState.errorMessage ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                },
-                trailingIcon = {
-                    IconButton(onClick = viewModel::toggleConfirmPasswordVisibility) {
-                        Icon(
-                            imageVector = if (uiState.isConfirmPasswordVisible) {
-                                Icons.Default.Visibility
-                            } else {
-                                Icons.Default.VisibilityOff
-                            },
-                            contentDescription = if (uiState.isConfirmPasswordVisible) "Ocultar" else "Mostrar",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 24.dp))
-
-            // Selector de tipo de usuario (toggle)
+            // ========== SECCIÓN SUPERIOR: LOGO Y TÍTULO ==========
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Tipo de cuenta",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF2C3E50)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = uiState.userType == "provider",
-                        onCheckedChange = { viewModel.toggleUserType() },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = Color(0xFF1A7FA6)
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Soy proveedor de servicios turísticos",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (uiState.userType == "provider") {
-                            Color(0xFF1A7FA6)
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 24.dp))
-
-            // Register Button
-            Button(
-                onClick = viewModel::onRegisterClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1A7FA6)
-                ),
-                enabled = !uiState.isLoading && uiState.name.isNotBlank() && uiState.email.isNotBlank(),
-                shape = MaterialTheme.shapes.medium
+                    .padding(top = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        text = "Crear Cuenta",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                MunayTripLogoMedium()
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Bienvenido a MunayTrip",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A7FA6),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Conecta con viajeros y descubre nuevas experiencias",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF666666),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
             }
 
-            // Espaciado final
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            // ========== SECCIÓN MEDIA: BOTONES DE REGISTRO ==========
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 40.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "¿Ya tienes una cuenta? ",
-                    color = Color.Gray,
-                    style = MaterialTheme.typography.bodyMedium
+                // Botón: Email
+                RegisterMethodButton(
+                    icon = Icons.Default.Email,
+                    title = "Continuar con correo",
+                    subtitle = "Rápido y seguro",
+                    onClick = onNavigateToEmailRegister,
+                    enabled = true
                 )
-                TextButton(
-                    onClick = onNavigateToLogin, // 👈 usamos la navegación  hacia login
-                    enabled = !uiState.isLoading
+
+                // Botón: Teléfono deshabilitado
+                RegisterMethodButton(
+                    icon = Icons.Default.Phone,
+                    title = "Continuar con teléfono",
+                    subtitle = "Próximamente",
+                    onClick = onNavigateToPhoneRegister,
+                    enabled = false
+                )
+
+                // Botón: Google deshabilitado
+                GoogleRegisterButton(
+                    onClick = onNavigateToGoogleRegister,
+                    enabled = false
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Inicia sesión",
-                        color = Color(0xFF1A7FA6),
-                        fontWeight = FontWeight.Bold
+                        text = "¿Ya tienes una cuenta? ",
+                        color = Color(0xFF666666),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Normal
                     )
+                    TextButton(
+                        onClick = onNavigateToLogin,
+                        modifier = Modifier.padding(0.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(
+                            text = "Inicia sesión",
+                            color = Color(0xFF1A7FA6),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun RegisterMethodButton(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(72.dp),
+        enabled = enabled,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(
+            1.5.dp,
+            if (enabled) Color(0xFF1A7FA6) else Color(0xFFE0E0E0)
+        ),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (enabled) Color.White else Color(0xFFFAFAFA),
+            contentColor = if (enabled) Color.Black else Color.Gray
+        ),
+        contentPadding = PaddingValues(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = if (enabled) Color(0xFF1A7FA6) else Color(0xFFBDBDBD)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (enabled) Color(0xFF1A1A1A) else Color(0xFFBDBDBD)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (enabled) Color(0xFF999999) else Color(0xFFD0D0D0)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun GoogleRegisterButton(
+    onClick: () -> Unit,
+    enabled: Boolean = true
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(72.dp),
+        enabled = enabled,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(
+            1.5.dp,
+            if (enabled) Color(0xFF1A7FA6) else Color(0xFFE0E0E0)
+        ),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (enabled) Color.White else Color(0xFFFAFAFA),
+            contentColor = if (enabled) Color.Black else Color.Gray
+        ),
+        contentPadding = PaddingValues(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.google),
+                contentDescription = null,
+                modifier = Modifier.size(32.dp)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Continuar con Google",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (enabled) Color(0xFF1A1A1A) else Color(0xFFBDBDBD)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Próximamente",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (enabled) Color(0xFF999999) else Color(0xFFD0D0D0)
+                )
             }
         }
     }
