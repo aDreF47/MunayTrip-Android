@@ -32,7 +32,8 @@ import com.dsm.munaytripandroid.core.presentation.components.MunayTripLogoMedium
 fun LoginScreen(
     viewModel: LoginViewModel = viewModel(),
     onLoginSuccess: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val loginSuccess by viewModel.loginSuccess.collectAsState()
@@ -231,6 +232,30 @@ fun LoginScreen(
             // Espaciador flexible solo en portrait
             if (!isLandscape) {
                 Spacer(modifier = Modifier.weight(1f))
+            }
+
+            // Espaciado final
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "¿No tienes una cuenta? ",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                TextButton(
+                    onClick = onNavigateToRegister, // 👈 usamos la navegación hacia  register
+                    enabled = !uiState.isLoading
+                ) {
+                    Text(
+                        text = "Registrarse",
+                        color = Color(0xFF1A7FA6),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

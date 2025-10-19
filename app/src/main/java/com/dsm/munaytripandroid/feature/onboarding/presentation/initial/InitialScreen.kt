@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,10 +15,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dsm.munaytripandroid.R
 import com.dsm.munaytripandroid.core.presentation.components.MunayTripLogo
 
@@ -159,12 +165,42 @@ fun InitialScreen(
             }
 
             // Texto de ayuda o versión (opcional)
-            Text(
-                text = "¿Necesitas ayuda? Contáctanos",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF5D6D7E).copy(alpha = 0.7f),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 16.dp)
+            val uriHandler = LocalUriHandler.current
+
+            val annotatedText = buildAnnotatedString {
+                append("¿Necesitas ayuda? ")
+
+                pushStringAnnotation(
+                    tag = "URL",
+                    annotation = "https://wa.me/51935711810"
+                )
+                withStyle(
+                    style = SpanStyle(
+                        color = Color(0xFF1A7FA6),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                ) {
+                    append("Contáctanos")
+                }
+                pop()
+            }
+
+            ClickableText(
+                text = annotatedText,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color(0xFF5D6D7E).copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                onClick = { offset ->
+                    annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                        .firstOrNull()?.let { annotation ->
+                            uriHandler.openUri(annotation.item)
+                        }
+                }
             )
         }
     }

@@ -20,13 +20,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dsm.munaytripandroid.core.presentation.components.MunayTripLogoMedium
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel = viewModel(),
     onRegisterSuccess: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val registerSuccess by viewModel.registerSuccess.collectAsState()
@@ -75,8 +77,9 @@ fun RegisterScreen(
             verticalArrangement = Arrangement.Top // Siempre Top porque tiene mucho contenido
         ) {
 
+            MunayTripLogoMedium()
             Text(
-                text = "Únete a MunayTrip",
+                text = "Se parte de la comunidad MunayTrip",
                 style = if (isLandscape) {
                     MaterialTheme.typography.headlineSmall
                 } else {
@@ -299,6 +302,27 @@ fun RegisterScreen(
 
             // Espaciado final
             Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "¿Ya tienes una cuenta? ",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                TextButton(
+                    onClick = onNavigateToLogin, // 👈 usamos la navegación  hacia login
+                    enabled = !uiState.isLoading
+                ) {
+                    Text(
+                        text = "Inicia sesión",
+                        color = Color(0xFF1A7FA6),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     }
 }

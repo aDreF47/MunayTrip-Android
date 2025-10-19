@@ -42,10 +42,14 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
         composable<Initial> {
             InitialScreen(
                 onNavigateToLogin = {
-                    navController.navigate(Login)
+                    navController.navigate(Login) {
+                        launchSingleTop = true
+                    }
                 },
                 onNavigateToRegister = {
-                    navController.navigate(Register)
+                    navController.navigate(Register) {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -57,11 +61,19 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                     navController.navigate(Home) {
                         // Eliminar toda la pila hasta Initial
                         popUpTo(Initial) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onNavigateBack = {
-                    navController.navigateUp()
+                    navController.popBackStack()
+                },
+                onNavigateToRegister = {
+                    navController.navigate(Register) {
+                        popUpTo(Login) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
+
             )
         }
 
@@ -71,10 +83,17 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                 onRegisterSuccess = {
                     navController.navigate(Home) {
                         popUpTo(Initial) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onNavigateBack = {
-                    navController.navigateUp()
+                    navController.popBackStack() // ✅ igual que arriba
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Login) {
+                        popUpTo(Register) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
