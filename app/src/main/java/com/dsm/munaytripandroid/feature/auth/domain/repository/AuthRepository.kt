@@ -13,7 +13,7 @@ interface AuthRepository {
     /**
      * Registra un nuevo usuario con email y contraseña
      */
-    suspend fun register(email: String, password: String, displayName: String): Result<User>
+    suspend fun register(email: String, password: String, displayName: String, userType: String, username: String): Result<User>
 
     /**
      * Inicia sesión con email y contraseña

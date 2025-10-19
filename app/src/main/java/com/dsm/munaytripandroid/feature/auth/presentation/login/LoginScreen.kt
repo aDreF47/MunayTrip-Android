@@ -1,11 +1,7 @@
 package com.dsm.munaytripandroid.feature.auth.presentation.login
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
@@ -15,32 +11,30 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.google.firebase.auth.FirebaseAuth
-import com.dsm.munaytripandroid.R
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    auth: FirebaseAuth,
+    viewModel: LoginViewModel = viewModel(),
     onLoginSuccess: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsState()
+    val loginSuccess by viewModel.loginSuccess.collectAsState()
 
-    // Coroutine scope para operaciones asíncronas
-    val scope = rememberCoroutineScope()
+    // Observar evento de login exitoso
+    LaunchedEffect(loginSuccess) {
+        if (loginSuccess) {
+            onLoginSuccess()
+            viewModel.resetLoginSuccess()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -74,67 +68,55 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
+            // Email Field
             OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                    errorMessage = null // Limpiar error al escribir
-                },
+                value = uiState.email,
+                onValueChange = viewModel::onEmailChange,
                 label = { Text("Correo electrónico") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = !isLoading,
-                isError = errorMessage != null,
+                enabled = !uiState.isLoading,
+                isError = uiState.errorMessage != null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Password Field
             OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    errorMessage = null // Limpiar error al escribir
-                },
+                value = uiState.password,
+                onValueChange = viewModel::onPasswordChange,
                 label = { Text("Contraseña") },
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordVisible) {
+                visualTransformation = if (uiState.isPasswordVisible) {
                     VisualTransformation.None
                 } else {
                     PasswordVisualTransformation()
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true,
-                enabled = !isLoading,
-                isError = errorMessage != null,
+                enabled = !uiState.isLoading,
+                isError = uiState.errorMessage != null,
                 trailingIcon = {
-                    val image = if (passwordVisible) {
-                        Icons.Default.Visibility
-                    } else {
-                        Icons.Default.VisibilityOff
-                    }
-                    val description = if (passwordVisible) {
-                        stringResource(R.string.login_password_ocultar)
-                    } else {
-                        stringResource(R.string.login_password_mostrar)
-                    }
-
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    IconButton(onClick = viewModel::togglePasswordVisibility) {
                         Icon(
-                            imageVector = image,
-                            contentDescription = description,
+                            imageVector = if (uiState.isPasswordVisible) {
+                                Icons.Default.Visibility
+                            } else {
+                                Icons.Default.VisibilityOff
+                            },
+                            contentDescription = if (uiState.isPasswordVisible) "Ocultar" else "Mostrar",
                             tint = Color.Gray
                         )
                     }
                 }
             )
 
-            // Mostrar mensaje de error
-            if (errorMessage != null) {
+            // Error Message
+            if (uiState.errorMessage != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = errorMessage ?: "",
+                    text = uiState.errorMessage ?: "",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -142,80 +124,18 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Login Button
             Button(
-                onClick = {
-                    // Validaciones
-                    when {
-                        email.isBlank() -> {
-                            errorMessage = "El correo no puede estar vacío"
-                            return@Button
-                        }
-                        !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                            errorMessage = "Correo electrónico inválido"
-                            return@Button
-                        }
-                        password.isBlank() -> {
-                            errorMessage = "La contraseña no puede estar vacía"
-                            return@Button
-                        }
-                        password.length < 6 -> {
-                            errorMessage = "La contraseña debe tener al menos 6 caracteres"
-                            return@Button
-                        }
-                    }
-
-                    // Iniciar proceso de login
-                    isLoading = true
-                    errorMessage = null
-
-                    scope.launch {
-                        try {
-                            // Autenticación con Firebase (AWAIT para esperar resultado)
-                            val result = auth.signInWithEmailAndPassword(email, password).await()
-                            val user = result.user
-
-                            if (user != null) {
-                                Log.d("AUTH", "Login exitoso: ${user.email}")
-                                // Solo navegar si el login fue exitoso
-                                onLoginSuccess()
-                            } else {
-                                errorMessage = "Error al iniciar sesión"
-                                Log.e("AUTH", "Usuario nulo después del login")
-                            }
-
-                        } catch (e: Exception) {
-                            // Manejo de errores específicos
-                            errorMessage = when (e) {
-                                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> {
-                                    "Contraseña incorrecta"
-                                }
-                                is com.google.firebase.auth.FirebaseAuthInvalidUserException -> {
-                                    "Usuario no encontrado"
-                                }
-                                is com.google.firebase.FirebaseNetworkException -> {
-                                    "Error de conexión. Verifica tu internet"
-                                }
-                                else -> {
-                                    "Error: ${e.message}"
-                                }
-                            }
-                            Log.e("AUTH", "Error en login: ${e.message}", e)
-                        } finally {
-                            isLoading = false
-                        }
-                    }
-
-                    // TODO: Implementar lógica de login
-                },
+                onClick = viewModel::onLoginClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF1A7FA6)
                 ),
-                enabled = !isLoading // Deshabilitar mientras carga
+                enabled = !uiState.isLoading
             ) {
-                if (isLoading) {
+                if (uiState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = Color.White,
@@ -230,14 +150,11 @@ fun LoginScreen(
                 }
             }
 
-            // Botón de olvidé mi contraseña
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(
-                onClick = {
-                    // TODO: Implementar reset de contraseña
-                },
-                enabled = !isLoading
+                onClick = { /* TODO: Reset password */ },
+                enabled = !uiState.isLoading
             ) {
                 Text(
                     text = "¿Olvidaste tu contraseña?",

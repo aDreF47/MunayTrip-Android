@@ -29,8 +29,8 @@ object Home
 //@Serializable
 //object Bookings
 //
-//@Serializable
-//object Profile
+@Serializable
+object Profile
 //
 //@Serializable
 //object CreateOffer

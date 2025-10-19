@@ -7,7 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,8 +47,11 @@ fun InitialScreen(
             // Logo principal
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "Munay Trip Logo",
-                modifier = Modifier.size(180.dp)
+                contentDescription = "Munay Trip - Llama",
+                modifier = Modifier
+                    .size(300.dp) // Mismo tamaño que el background
+                    .scale(1.5f), // Misma escala
+                contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.height(32.dp))

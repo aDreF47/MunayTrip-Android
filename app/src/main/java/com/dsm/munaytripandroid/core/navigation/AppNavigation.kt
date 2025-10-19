@@ -9,6 +9,7 @@ import com.dsm.munaytripandroid.feature.auth.presentation.login.LoginScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.register.RegisterScreen
 import com.dsm.munaytripandroid.feature.home.presentation.HomeScreen
 import com.dsm.munaytripandroid.feature.onboarding.presentation.initial.InitialScreen
+import com.dsm.munaytripandroid.feature.profile.presentation.ProfileScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -52,7 +53,6 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
         // ========== LOGIN SCREEN ==========
         composable<Login> {
             LoginScreen(
-                auth,
                 onLoginSuccess = {
                     navController.navigate(Home) {
                         // Eliminar toda la pila hasta Initial
@@ -68,7 +68,6 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
         // ========== REGISTER SCREEN ==========
         composable<Register> {
             RegisterScreen(
-                auth,
                 onRegisterSuccess = {
                     navController.navigate(Home) {
                         popUpTo(Initial) { inclusive = true }
@@ -83,6 +82,7 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
         // ========== HOME SCREEN ==========
         composable<Home> {
             HomeScreen(
+                onNavigateToProfile = { navController.navigate(Profile) }, //aagregao para perfil
                 auth = auth,
                 onLogout = {
                     navController.navigate(Initial) {
@@ -90,6 +90,11 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                     }
                 }
             )
+        }
+
+        // ========== PROFILE SCREEN ==========
+        composable<Profile> {
+            ProfileScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }

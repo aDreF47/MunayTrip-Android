@@ -1,6 +1,6 @@
 package com.dsm.munaytripandroid.feature.auth.presentation.register
 
-import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -17,25 +17,24 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    auth: FirebaseAuth,
+    viewModel: RegisterViewModel = viewModel(),
     onRegisterSuccess: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsState()
+    val registerSuccess by viewModel.registerSuccess.collectAsState()
 
-    val scope = rememberCoroutineScope()
+    LaunchedEffect(registerSuccess) {
+        if (registerSuccess) {
+            onRegisterSuccess()
+            viewModel.resetRegisterSuccess()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -56,7 +55,7 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(32.dp),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -67,162 +66,183 @@ fun RegisterScreen(
                 color = Color(0xFF1A7FA6)
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
+            // Nombre completo
             OutlinedTextField(
-                value = name,
-                onValueChange = {
-                    name = it
-                    errorMessage = null
-                },
+                value = uiState.name,
+                onValueChange = viewModel::onNameChange,
                 label = { Text("Nombre completo") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = !isLoading,
-                isError = errorMessage != null
+                enabled = !uiState.isLoading,
+                isError = uiState.errorMessage?.contains("nombre") == true,
+                supportingText = {
+                    if (uiState.errorMessage?.contains("nombre") == true) {
+                        Text(
+                            text = uiState.errorMessage ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Email
             OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                    errorMessage = null
-                },
+                value = uiState.email,
+                onValueChange = viewModel::onEmailChange,
                 label = { Text("Correo electrónico") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = !isLoading,
-                isError = errorMessage != null,
+                enabled = !uiState.isLoading,
+                isError = uiState.errorMessage?.contains("correo") == true,
+                supportingText = {
+                    if (uiState.errorMessage?.contains("correo") == true) {
+                        Text(
+                            text = uiState.errorMessage ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Contraseña
             OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    errorMessage = null
-                },
+                value = uiState.password,
+                onValueChange = viewModel::onPasswordChange,
                 label = { Text("Contraseña") },
                 modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (passwordVisible) {
+                visualTransformation = if (uiState.isPasswordVisible) {
                     VisualTransformation.None
                 } else {
                     PasswordVisualTransformation()
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true,
-                enabled = !isLoading,
-                isError = errorMessage != null,
-                trailingIcon = {
-                    val image = if (passwordVisible) {
-                        Icons.Default.Visibility
-                    } else {
-                        Icons.Default.VisibilityOff
+                enabled = !uiState.isLoading,
+                isError = uiState.errorMessage?.contains("contraseña") == true,
+                supportingText = {
+                    if (uiState.errorMessage?.contains("contraseña") == true) {
+                        Text(
+                            text = uiState.errorMessage ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
-
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                },
+                trailingIcon = {
+                    IconButton(onClick = viewModel::togglePasswordVisibility) {
                         Icon(
-                            imageVector = image,
-                            contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
-                            tint = Color.Gray
+                            imageVector = if (uiState.isPasswordVisible) {
+                                Icons.Default.Visibility
+                            } else {
+                                Icons.Default.VisibilityOff
+                            },
+                            contentDescription = if (uiState.isPasswordVisible) "Ocultar" else "Mostrar",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             )
 
-            if (errorMessage != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = errorMessage ?: "",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = {
-                    // Validaciones
-                    when {
-                        name.isBlank() -> {
-                            errorMessage = "El nombre no puede estar vacío"
-                            return@Button
-                        }
-                        email.isBlank() -> {
-                            errorMessage = "El correo no puede estar vacío"
-                            return@Button
-                        }
-                        !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                            errorMessage = "Correo electrónico inválido"
-                            return@Button
-                        }
-                        password.length < 6 -> {
-                            errorMessage = "La contraseña debe tener al menos 6 caracteres"
-                            return@Button
-                        }
-                    }
-
-                    isLoading = true
-                    errorMessage = null
-
-                    scope.launch {
-                        try {
-                            // Crear usuario en Firebase
-                            val result = auth.createUserWithEmailAndPassword(email, password).await()
-                            val user = result.user
-
-                            if (user != null) {
-                                // Actualizar nombre del usuario
-                                val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
-                                    .setDisplayName(name)
-                                    .build()
-
-                                user.updateProfile(profileUpdates).await()
-
-                                // Enviar verificación de email
-                                user.sendEmailVerification().await()
-
-                                Log.d("AUTH", "Registro exitoso: ${user.email}")
-                                onRegisterSuccess()
-                            } else {
-                                errorMessage = "Error al crear la cuenta"
-                            }
-
-                        } catch (e: Exception) {
-                            errorMessage = when (e) {
-                                is com.google.firebase.auth.FirebaseAuthUserCollisionException -> {
-                                    "Este correo ya está registrado"
-                                }
-                                is com.google.firebase.auth.FirebaseAuthWeakPasswordException -> {
-                                    "Contraseña muy débil"
-                                }
-                                is com.google.firebase.FirebaseNetworkException -> {
-                                    "Error de conexión"
-                                }
-                                else -> {
-                                    "Error: ${e.message}"
-                                }
-                            }
-                            Log.e("AUTH", "Error en registro: ${e.message}", e)
-                        } finally {
-                            isLoading = false
-                        }
+            // Confirmar contraseña
+            OutlinedTextField(
+                value = uiState.confirmPassword,
+                onValueChange = viewModel::onConfirmPasswordChange,
+                label = { Text("Confirmar contraseña") },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = if (uiState.isConfirmPasswordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                enabled = !uiState.isLoading,
+                isError = uiState.errorMessage?.contains("coincidir") == true,
+                supportingText = {
+                    if (uiState.errorMessage?.contains("coincidir") == true) {
+                        Text(
+                            text = uiState.errorMessage ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 },
+                trailingIcon = {
+                    IconButton(onClick = viewModel::toggleConfirmPasswordVisibility) {
+                        Icon(
+                            imageVector = if (uiState.isConfirmPasswordVisible) {
+                                Icons.Default.Visibility
+                            } else {
+                                Icons.Default.VisibilityOff
+                            },
+                            contentDescription = if (uiState.isConfirmPasswordVisible) "Ocultar" else "Mostrar",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Selector de tipo de usuario (toggle)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Tipo de cuenta",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = uiState.userType == "provider",
+                        onCheckedChange = { viewModel.toggleUserType() },
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = "Soy proveedor de servicios turísticos",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (uiState.userType == "provider") {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
+                    )
+                }
+
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Register Button
+            Button(
+                onClick = viewModel::onRegisterClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF1A7FA6)
                 ),
-                enabled = !isLoading
+                enabled = !uiState.isLoading && uiState.name.isNotBlank() && uiState.email.isNotBlank()
             ) {
-                if (isLoading) {
+                if (uiState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = Color.White,

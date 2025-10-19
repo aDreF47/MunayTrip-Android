@@ -41,7 +41,7 @@ class FirebaseAuthDataSource(
             firebaseUser.updateProfile(profileUpdates).await()
 
             // Enviar verificación de email
-            firebaseUser.sendEmailVerification().await()
+            // firebaseUser.sendEmailVerification().await()
 
             return firebaseUser.toDomainUser()
 
