@@ -1,7 +1,10 @@
 package com.dsm.munaytripandroid.feature.auth.presentation.login
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
@@ -10,13 +13,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dsm.munaytripandroid.R
+import com.dsm.munaytripandroid.core.presentation.components.MunayTripLogoMedium
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +36,9 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val loginSuccess by viewModel.loginSuccess.collectAsState()
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
 
     // Observar evento de login exitoso
     LaunchedEffect(loginSuccess) {
@@ -47,7 +59,12 @@ fun LoginScreen(
                             contentDescription = "Volver"
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF1A7FA6),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
             )
         }
     ) { paddingValues ->
@@ -55,18 +72,58 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(32.dp),
+                .verticalScroll(rememberScrollState()) // ✅ Scroll vertical
+                .padding(horizontal = 32.dp)
+                .padding(
+                    top = if (isLandscape) 16.dp else 32.dp,
+                    bottom = 32.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = if (isLandscape) Arrangement.Top else Arrangement.Center
         ) {
+
+            // Espaciador flexible solo en portrait
+            if (!isLandscape) {
+                Spacer(modifier = Modifier.weight(0.3f))
+            }
+
+            // Logo de la app
+            Box(
+                modifier = Modifier
+                    .size(if (isLandscape) 120.dp else 160.dp)
+                    .padding(bottom = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+//                Image(
+//                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+//                    contentDescription = "MunayTrip Logo",
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .scale(1.2f),
+//                    contentScale = ContentScale.Fit
+//                )
+                MunayTripLogoMedium()
+            }
+
             Text(
-                text = "Bienvenido de vuelta",
-                style = MaterialTheme.typography.headlineMedium,
+                text = "Bienvenido de vuelta hermano",
+                style = if (isLandscape) {
+                    MaterialTheme.typography.headlineSmall
+                } else {
+                    MaterialTheme.typography.headlineMedium
+                },
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1A7FA6)
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Text(
+                text = "Inicia sesión para continuar",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF5D6D7E),
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(if (isLandscape) 20.dp else 32.dp))
 
             // Email Field
             OutlinedTextField(
@@ -77,7 +134,11 @@ fun LoginScreen(
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 isError = uiState.errorMessage != null,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1A7FA6),
+                    focusedLabelColor = Color(0xFF1A7FA6)
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -97,6 +158,10 @@ fun LoginScreen(
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 isError = uiState.errorMessage != null,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1A7FA6),
+                    focusedLabelColor = Color(0xFF1A7FA6)
+                ),
                 trailingIcon = {
                     IconButton(onClick = viewModel::togglePasswordVisibility) {
                         Icon(
@@ -122,7 +187,7 @@ fun LoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(if (isLandscape) 24.dp else 32.dp))
 
             // Login Button
             Button(
@@ -133,7 +198,8 @@ fun LoginScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF1A7FA6)
                 ),
-                enabled = !uiState.isLoading
+                enabled = !uiState.isLoading,
+                shape = MaterialTheme.shapes.medium
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
@@ -160,6 +226,11 @@ fun LoginScreen(
                     text = "¿Olvidaste tu contraseña?",
                     color = Color(0xFF1A7FA6)
                 )
+            }
+
+            // Espaciador flexible solo en portrait
+            if (!isLandscape) {
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }

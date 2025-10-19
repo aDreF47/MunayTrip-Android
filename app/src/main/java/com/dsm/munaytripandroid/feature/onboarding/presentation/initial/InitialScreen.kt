@@ -3,63 +3,101 @@ package com.dsm.munaytripandroid.feature.onboarding.presentation.initial
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dsm.munaytripandroid.R
+import com.dsm.munaytripandroid.core.presentation.components.MunayTripLogo
 
 /**
- * INITIAL SCREEN - Pantalla de bienvenida
+ * INITIAL SCREEN - Pantalla de bienvenida responsive
  *
- * PRINCIPIOS GOOGLE 2025:
- * - Primera pantalla interactiva que ve el usuario
- * - Clara llamada a la acción (CTA)
- * - Navegación hacia Login o Register
- * - Botón Atrás desde aquí cierra la app (es el inicio efectivo)
+ * CARACTERÍSTICAS:
+ * - Scroll vertical para landscape y pantallas pequeñas
+ * - Responsive: Se adapta a diferentes tamaños y orientaciones
+ * - Botones siempre visibles y accesibles
+ * - Logo adaptable según espacio disponible
  */
 @Composable
 fun InitialScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+
+    // Tamaños adaptativos
+    val logoSize = if (isLandscape) 180.dp else 280.dp
+    val topSpacing = if (isLandscape) 16.dp else 48.dp
+    val middleSpacing = if (isLandscape) 16.dp else 32.dp
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFF8F9FA), // Gris muy claro arriba
+                        Color.White        // Blanco abajo
+                    )
+                )
+            )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .verticalScroll(rememberScrollState()) // ✅ Scroll vertical
+                .padding(horizontal = 32.dp)
+                .padding(top = topSpacing, bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = if (isLandscape) {
+                Arrangement.Top
+            } else {
+                Arrangement.Center
+            }
         ) {
 
-            // Logo principal
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "Munay Trip - Llama",
-                modifier = Modifier
-                    .size(300.dp) // Mismo tamaño que el background
-                    .scale(1.5f), // Misma escala
-                contentScale = ContentScale.Crop
-            )
+            // Espaciador flexible si no es landscape
+            if (!isLandscape) {
+                Spacer(modifier = Modifier.weight(0.5f))
+            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            // Logo LLama
+//            Image(
+//                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+//                contentDescription = "Munay Trip - Llama",
+//                modifier = Modifier
+//                    .size(logoSize)
+//                    .scale(1.3f),
+//                contentScale = ContentScale.Fit
+//            )
+
+            // logo general
+            MunayTripLogo()
+
+            Spacer(modifier = Modifier.height(middleSpacing))
 
             // Texto de bienvenida
             Text(
-                text = "Munay Trip",
-                style = MaterialTheme.typography.headlineLarge,
+                text = "MunayTrip",
+                style = if (isLandscape) {
+                    MaterialTheme.typography.headlineMedium
+                } else {
+                    MaterialTheme.typography.headlineLarge
+                },
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1A7FA6)
             )
@@ -67,13 +105,13 @@ fun InitialScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Tu compañero de viajes perfecto",
+                text = "Descubre Perú con estilo",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray,
+                color = Color(0xFF5D6D7E),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(if (isLandscape) 24.dp else 48.dp))
 
             // Botón de Registro (Primario)
             Button(
@@ -83,10 +121,11 @@ fun InitialScreen(
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF1A7FA6)
-                )
+                ),
+                shape = MaterialTheme.shapes.medium
             ) {
                 Text(
-                    text = "Crear Cuenta",
+                    text = "Registrarte gratis",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -102,7 +141,8 @@ fun InitialScreen(
                     .height(56.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = Color(0xFF1A7FA6)
-                )
+                ),
+                shape = MaterialTheme.shapes.medium
             ) {
                 Text(
                     text = "Iniciar Sesión",
@@ -110,6 +150,22 @@ fun InitialScreen(
                     fontWeight = FontWeight.SemiBold
                 )
             }
+
+            // Espaciador flexible si no es landscape
+            if (!isLandscape) {
+                Spacer(modifier = Modifier.weight(1f))
+            } else {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Texto de ayuda o versión (opcional)
+            Text(
+                text = "¿Necesitas ayuda? Contáctanos",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF5D6D7E).copy(alpha = 0.7f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 16.dp)
+            )
         }
     }
 }

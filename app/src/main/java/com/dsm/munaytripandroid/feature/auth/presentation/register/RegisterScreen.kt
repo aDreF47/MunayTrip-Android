@@ -1,8 +1,9 @@
 package com.dsm.munaytripandroid.feature.auth.presentation.register
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -28,6 +30,9 @@ fun RegisterScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val registerSuccess by viewModel.registerSuccess.collectAsState()
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
 
     LaunchedEffect(registerSuccess) {
         if (registerSuccess) {
@@ -47,7 +52,12 @@ fun RegisterScreen(
                             contentDescription = "Volver"
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF1A7FA6),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
             )
         }
     ) { paddingValues ->
@@ -55,18 +65,28 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 32.dp),
+                .verticalScroll(rememberScrollState()) // ✅ Scroll vertical
+                .padding(horizontal = 32.dp)
+                .padding(
+                    top = if (isLandscape) 16.dp else 24.dp,
+                    bottom = 32.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top // Siempre Top porque tiene mucho contenido
         ) {
+
             Text(
-                text = "Únete a Munay Trip",
-                style = MaterialTheme.typography.headlineMedium,
+                text = "Únete a MunayTrip",
+                style = if (isLandscape) {
+                    MaterialTheme.typography.headlineSmall
+                } else {
+                    MaterialTheme.typography.headlineMedium
+                },
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1A7FA6)
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 32.dp))
 
             // Nombre completo
             OutlinedTextField(
@@ -77,6 +97,10 @@ fun RegisterScreen(
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 isError = uiState.errorMessage?.contains("nombre") == true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1A7FA6),
+                    focusedLabelColor = Color(0xFF1A7FA6)
+                ),
                 supportingText = {
                     if (uiState.errorMessage?.contains("nombre") == true) {
                         Text(
@@ -88,7 +112,7 @@ fun RegisterScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Email
             OutlinedTextField(
@@ -99,6 +123,10 @@ fun RegisterScreen(
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 isError = uiState.errorMessage?.contains("correo") == true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1A7FA6),
+                    focusedLabelColor = Color(0xFF1A7FA6)
+                ),
                 supportingText = {
                     if (uiState.errorMessage?.contains("correo") == true) {
                         Text(
@@ -111,7 +139,7 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Contraseña
             OutlinedTextField(
@@ -128,6 +156,10 @@ fun RegisterScreen(
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 isError = uiState.errorMessage?.contains("contraseña") == true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1A7FA6),
+                    focusedLabelColor = Color(0xFF1A7FA6)
+                ),
                 supportingText = {
                     if (uiState.errorMessage?.contains("contraseña") == true) {
                         Text(
@@ -152,7 +184,7 @@ fun RegisterScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Confirmar contraseña
             OutlinedTextField(
@@ -169,6 +201,10 @@ fun RegisterScreen(
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 isError = uiState.errorMessage?.contains("coincidir") == true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1A7FA6),
+                    focusedLabelColor = Color(0xFF1A7FA6)
+                ),
                 supportingText = {
                     if (uiState.errorMessage?.contains("coincidir") == true) {
                         Text(
@@ -193,7 +229,7 @@ fun RegisterScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 24.dp))
 
             // Selector de tipo de usuario (toggle)
             Column(
@@ -203,33 +239,36 @@ fun RegisterScreen(
                 Text(
                     text = "Tipo de cuenta",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF2C3E50)
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
                         checked = uiState.userType == "provider",
                         onCheckedChange = { viewModel.toggleUserType() },
-                        modifier = Modifier.padding(end = 8.dp)
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFF1A7FA6)
+                        )
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Soy proveedor de servicios turísticos",
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (uiState.userType == "provider") {
-                            MaterialTheme.colorScheme.primary
+                            Color(0xFF1A7FA6)
                         } else {
                             MaterialTheme.colorScheme.onSurface
                         }
                     )
                 }
-
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 24.dp))
 
             // Register Button
             Button(
@@ -240,7 +279,8 @@ fun RegisterScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF1A7FA6)
                 ),
-                enabled = !uiState.isLoading && uiState.name.isNotBlank() && uiState.email.isNotBlank()
+                enabled = !uiState.isLoading && uiState.name.isNotBlank() && uiState.email.isNotBlank(),
+                shape = MaterialTheme.shapes.medium
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
@@ -256,6 +296,9 @@ fun RegisterScreen(
                     )
                 }
             }
+
+            // Espaciado final
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
