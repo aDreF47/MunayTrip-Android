@@ -5,7 +5,7 @@ data class RegisterUiState(
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "", // 👈 nuevo
-    val userType: String = "tourist", // 👈 por defecto "tourist"
+    val userType: String = "client", // 👈 por defecto "cient"
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isPasswordVisible: Boolean = false,

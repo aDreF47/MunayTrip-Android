@@ -7,7 +7,7 @@ import com.dsm.munaytripandroid.core.util.Result
 import com.dsm.munaytripandroid.feature.auth.data.remote.FirebaseAuthDataSource
 import com.dsm.munaytripandroid.feature.auth.data.remote.FirestoreDataSource
 import com.dsm.munaytripandroid.feature.auth.data.remote.ProviderFirestoreDataSource
-import com.dsm.munaytripandroid.feature.auth.data.remote.TouristFirestoreDataSource
+import com.dsm.munaytripandroid.feature.auth.data.remote.ClientFirestoreDataSource
 import com.dsm.munaytripandroid.feature.auth.data.repository.AuthRepositoryImpl
 import com.dsm.munaytripandroid.feature.auth.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +25,7 @@ class RegisterViewModel : ViewModel() {
     private val authRepository: AuthRepository = AuthRepositoryImpl(
         FirebaseAuthDataSource(),
         FirestoreDataSource(),
-        TouristFirestoreDataSource(),
+        ClientFirestoreDataSource(),
         ProviderFirestoreDataSource()
     )
 
@@ -58,9 +58,9 @@ class RegisterViewModel : ViewModel() {
         _uiState.update { it.copy(isConfirmPasswordVisible = !it.isConfirmPasswordVisible) }
     }
 
-    // Alternar entre provider y tourist
+    // Alternar entre provider y client
     fun toggleUserType() {
-        val newUserType = if (_uiState.value.userType == "provider") "tourist" else "provider"
+        val newUserType = if (_uiState.value.userType == "provider") "client" else "provider"
         _uiState.update { it.copy(userType = newUserType, errorMessage = null) }
     }
 

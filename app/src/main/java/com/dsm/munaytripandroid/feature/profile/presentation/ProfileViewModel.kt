@@ -8,7 +8,7 @@ import com.dsm.munaytripandroid.feature.auth.data.repository.AuthRepositoryImpl
 import com.dsm.munaytripandroid.feature.auth.data.remote.FirebaseAuthDataSource
 import com.dsm.munaytripandroid.feature.auth.data.remote.FirestoreDataSource
 import com.dsm.munaytripandroid.feature.auth.data.remote.ProviderFirestoreDataSource
-import com.dsm.munaytripandroid.feature.auth.data.remote.TouristFirestoreDataSource
+import com.dsm.munaytripandroid.feature.auth.data.remote.ClientFirestoreDataSource
 import com.dsm.munaytripandroid.feature.profile.data.repository.ProfileRepositoryImpl
 import com.dsm.munaytripandroid.feature.profile.domain.repository.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +23,7 @@ class ProfileViewModel : ViewModel() {
     private val authRepository = AuthRepositoryImpl(
         FirebaseAuthDataSource(),
         FirestoreDataSource(),
-        TouristFirestoreDataSource(),
+        ClientFirestoreDataSource(),
         ProviderFirestoreDataSource()
     )
 

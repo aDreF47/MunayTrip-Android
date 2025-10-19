@@ -19,10 +19,10 @@ class FirestoreProfileDataSource(
 
             // 2. Obtener datos específicos según tipo
             val (fullName, avatarUrl) = when (user.userType) {
-                "tourist" -> {
-                    val touristDoc = firestore.collection("tourists").document(userId).get().await()
-                    val name = touristDoc.getString("nombre") ?: user.displayName ?: ""
-                    val avatar = touristDoc.getString("avatar_url")
+                "client" -> {
+                    val clientDoc = firestore.collection("clients").document(userId).get().await()
+                    val name = clientDoc.getString("nombre") ?: user.displayName ?: ""
+                    val avatar = clientDoc.getString("avatar_url")
                     name to avatar
                 }
                 "provider" -> {
@@ -52,7 +52,7 @@ class FirestoreProfileDataSource(
     suspend fun updateProfileName(userId: String, userType: String, newName: String): Result<Unit> {
         return try {
             val collection = when (userType) {
-                "tourist" -> "tourists"
+                "client" -> "clients"
                 "provider" -> "providers"
                 else -> throw IllegalArgumentException("Tipo de usuario no válido")
             }

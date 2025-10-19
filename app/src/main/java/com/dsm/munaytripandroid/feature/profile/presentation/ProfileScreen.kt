@@ -132,7 +132,7 @@ fun ProfileContent(
 
         // Tipo de usuario
         val userTypeText = when (userProfile.userType) {
-            "tourist" -> "Turista"
+            "client" -> "Cliente"
             "provider" -> "Proveedor"
             else -> "Usuario"
         }

@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.dsm.munaytripandroid.feature.auth.data.remote.FirebaseAuthDataSource
 import com.dsm.munaytripandroid.feature.auth.data.remote.FirestoreDataSource
 import com.dsm.munaytripandroid.feature.auth.data.remote.ProviderFirestoreDataSource
-import com.dsm.munaytripandroid.feature.auth.data.remote.TouristFirestoreDataSource
+import com.dsm.munaytripandroid.feature.auth.data.remote.ClientFirestoreDataSource
 import com.dsm.munaytripandroid.feature.auth.data.repository.AuthRepositoryImpl
 import com.dsm.munaytripandroid.feature.auth.domain.repository.AuthRepository
 
@@ -13,9 +13,9 @@ class SplashViewModel : ViewModel() {
     // Crear dependencias manualmente (temporal)
     private val authRepository: AuthRepository = AuthRepositoryImpl(
         FirebaseAuthDataSource(),
-        FirestoreDataSource(),  // ⬅️ AGREGAR
+        FirestoreDataSource(),
 
-        TouristFirestoreDataSource(),
+        ClientFirestoreDataSource(),
         ProviderFirestoreDataSource()
     )
 

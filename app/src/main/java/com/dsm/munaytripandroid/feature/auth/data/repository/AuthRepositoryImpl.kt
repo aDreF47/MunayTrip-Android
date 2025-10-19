@@ -4,7 +4,7 @@ import com.dsm.munaytripandroid.core.util.Result
 import com.dsm.munaytripandroid.feature.auth.data.remote.FirebaseAuthDataSource
 import com.dsm.munaytripandroid.feature.auth.data.remote.FirestoreDataSource
 import com.dsm.munaytripandroid.feature.auth.data.remote.ProviderFirestoreDataSource
-import com.dsm.munaytripandroid.feature.auth.data.remote.TouristFirestoreDataSource
+import com.dsm.munaytripandroid.feature.auth.data.remote.ClientFirestoreDataSource
 import com.dsm.munaytripandroid.feature.auth.domain.model.User
 import com.dsm.munaytripandroid.feature.auth.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.Flow
 class AuthRepositoryImpl(
     private val firebaseAuthDataSource: FirebaseAuthDataSource,
     private val firestoreDataSource: FirestoreDataSource, // ⬅ NUEVO PARÁMETRO
-    private val touristDataSource: TouristFirestoreDataSource,   // NUEVO
+    private val clientDataSource: ClientFirestoreDataSource,   // NUEVO
     private val providerDataSource: ProviderFirestoreDataSource // NUEVO
 ) : AuthRepository {
 
@@ -40,10 +40,10 @@ class AuthRepositoryImpl(
                 username = username
             )
 
-            // 3. Crear en tourists/ o providers/ según el tipo
+            // 3. Crear en clients/ o providers/ según el tipo
             when (userType) {
-                "tourist" -> {
-                    touristDataSource.createTourist(user.uid, fullName, username)
+                "client" -> {
+                    clientDataSource.createClient(user.uid, fullName, username)
                 }
                 "provider" -> {
                     providerDataSource.createProvider(user.uid, fullName, username)

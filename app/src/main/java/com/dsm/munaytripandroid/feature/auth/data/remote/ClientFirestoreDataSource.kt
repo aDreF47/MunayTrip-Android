@@ -4,17 +4,17 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-class TouristFirestoreDataSource(
+class ClientFirestoreDataSource(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
 
-    suspend fun createTourist(
-        touristId: String,
+    suspend fun createClient(
+        clientId: String,
         nombre: String,
         username: String? = null
     ) {
-        val touristDoc = mapOf(
-            "tourist_id" to touristId,
+        val clientDoc = mapOf(
+            "client_id" to clientId,
             "nombre" to nombre,
             "username" to username,       // 👈 Opcional: si quieres referenciarlo
             "preferencias" to emptyList<String>(),
@@ -26,9 +26,9 @@ class TouristFirestoreDataSource(
             "created_at" to FieldValue.serverTimestamp()
         )
 
-        firestore.collection("tourists")
-            .document(touristId)
-            .set(touristDoc)
+        firestore.collection("clients")
+            .document(clientId)
+            .set(clientDoc)
             .await()
     }
 }

@@ -75,9 +75,9 @@ graph TD
     
     %% CAPA DE DATOS
     subgraph "📊 DATA LAYER"
-        REPOSITORIES["📦 Repositories<br/>• AuthRepository<br/>• TouristRepository<br/>• ProviderRepository<br/>• OffersRepository<br/>• BookingsRepository<br/>• ReviewsRepository<br/>• ImageRepository<br/>• AnalyticsRepository<br/>• NotificationRepository"]
+        REPOSITORIES["📦 Repositories<br/>• AuthRepository<br/>• ClientRepository<br/>• ProviderRepository<br/>• OffersRepository<br/>• BookingsRepository<br/>• ReviewsRepository<br/>• ImageRepository<br/>• AnalyticsRepository<br/>• NotificationRepository"]
         
-        MODELS["🏗️ Data Models<br/>• User<br/>• Tourist<br/>• Provider<br/>• Offer<br/>• Booking<br/>• Review<br/>• Interaction<br/>• ProviderAnalytics<br/>• Notification<br/>• ImageUpload"]
+        MODELS["🏗️ Data Models<br/>• User<br/>• Client<br/>• Provider<br/>• Offer<br/>• Booking<br/>• Review<br/>• Interaction<br/>• ProviderAnalytics<br/>• Notification<br/>• ImageUpload"]
         
         MANAGERS["🎨 Managers<br/>• IconProvider<br/>• ImageManager<br/>• StorageManager<br/>• NotificationManager<br/>• CacheManager"]
     end
@@ -169,13 +169,13 @@ MunayTripAndroid/
 
 | Relación | Descripción |
 |--------|-----------|
-| `users.user_id → tourists.tourist_id` | Un usuario puede ser turista. |
+| `users.user_id → clients.client_id` | Un usuario puede ser turista. |
 | `users.user_id → providers.provider_id` | Un usuario puede ser proveedor. |
 | `providers.provider_id → offers.offer_id` | Un proveedor publica ofertas. |
-| `tourists.tourist_id → bookings.booking_id` | Un turista reserva ofertas. |
+| `clients.client_id → bookings.booking_id` | Un turista reserva ofertas. |
 | `offers.offer_id → bookings.booking_id` | Una oferta puede tener múltiples reservas. |
 | `bookings.booking_id → reviews.review_id` | Una reserva genera una reseña. |
-| `tourists.tourist_id → favorites.favorite_id` | Un turista agrega ofertas a favoritos. |
+| `clients.client_id → favorites.favorite_id` | Un turista agrega ofertas a favoritos. |
 | `offers.offer_id → favorites.favorite_id` | Una oferta puede estar en favoritos. |
 | `users.user_id → interactions.interaction_id` | Un usuario interactúa con ofertas. |
 | `offers.offer_id → interactions.interaction_id` | Una oferta recibe interacciones. |
@@ -192,15 +192,15 @@ MunayTripAndroid/
     "usr_turista_001": {
       "user_id": "usr_turista_001",
       "email": "fernando.rojas@gmail.com",
-      "user_type": "tourist",
+      "user_type": "client",
       "estado": "activo",
       "profile_image_url": "gs://munaytrip-app.appspot.com/users/avatars/usr_turista_001/profile.jpg",
       "created_at": { "_seconds": 1717200000, "_nanoseconds": 0 }
     }
   },
-  "tourists": {
+  "clients": {
     "usr_turista_001": {
-      "tourist_id": "usr_turista_001",
+      "client_id": "usr_turista_001",
       "nombre": "Fernando Rojas",
       "preferencias": ["cultura", "gastronomia"],
       "puntos": 275,
