@@ -1,11 +1,11 @@
 {
   "users": {
-    "usr_turista_001": {
-      "user_id": "usr_turista_001",
+    "usr_cliente_001": {
+      "user_id": "usr_cliente_001",
       "email": "fernando.rojas@gmail.com",
       "user_type": "client",
       "estado": "activo",
-      "profile_image_url": "gs://munaytrip-app.appspot.com/users/avatars/usr_turista_001/profile.jpg",
+      "profile_image_url": "gs://munaytrip-app.appspot.com/users/avatars/usr_cliente_001/profile.jpg",
       "created_at": {
         "_seconds": 1717200000,
         "_nanoseconds": 0
@@ -35,8 +35,8 @@
     }
   },
   "clients": {
-    "usr_turista_001": {
-      "client_id": "usr_turista_001",
+    "usr_cliente_001": {
+      "client_id": "usr_cliente_001",
       "nombre": "Fernando Rojas",
       "preferencias": [
         "cultura",
@@ -49,7 +49,7 @@
         "explorador",
         "foodie"
       ],
-      "avatar_url": "gs://munaytrip-app.appspot.com/users/avatars/usr_turista_001/avatar_512.jpg",
+      "avatar_url": "gs://munaytrip-app.appspot.com/users/avatars/usr_cliente_001/avatar_512.jpg",
       "ubicacion_actual": {
         "_latitude": -12.0464,
         "_longitude": -77.0428
@@ -217,7 +217,7 @@
   "bookings": {
     "bk_fer_001": {
       "booking_id": "bk_fer_001",
-      "client_id": "usr_turista_001",
+      "client_id": "usr_cliente_001",
       "offer_id": "ofr_feria_artesanal_2025",
       "fecha_reserva": {
         "_seconds": 1717372800,
@@ -245,7 +245,7 @@
     "rvw_fer_001": {
       "review_id": "rvw_fer_001",
       "booking_id": "bk_fer_001",
-      "client_id": "usr_turista_001",
+      "client_id": "usr_cliente_001",
       "offer_id": "ofr_feria_artesanal_2025",
       "rating": 5,
       "comentario": "Increíble ambiente familiar y cultural. Los artesanos son muy talentosos y amables. Mi hija disfrutó mucho el área infantil y los talleres gratuitos. ¡Definitivamente volveremos el próximo mes!",
@@ -276,7 +276,7 @@
   "favorites": {
     "fav_001": {
       "favorite_id": "fav_001",
-      "client_id": "usr_turista_001",
+      "client_id": "usr_cliente_001",
       "offer_id": "ofr_hotel_room_cusco",
       "categoria": "hospedaje",
       "timestamp": {
@@ -288,7 +288,7 @@
   "interactions": {
     "int_001": {
       "interaction_id": "int_001",
-      "user_id": "usr_turista_001",
+      "user_id": "usr_cliente_001",
       "offer_id": "ofr_feria_artesanal_2025",
       "tipo": "view",
       "metadata": {
@@ -346,7 +346,7 @@
   "notifications": {
     "notif_001": {
       "notification_id": "notif_001",
-      "user_id": "usr_turista_001",
+      "user_id": "usr_cliente_001",
       "title": "¡Reserva confirmada! 📸",
       "body": "Tu registro para la Feria Artesanal está confirmado. ¡Te esperamos el sábado!",
       "type": "attendance_confirm",
