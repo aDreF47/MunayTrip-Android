@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MunayTrip</string>
+    <string name="app_name">Munay Trip</string>
     <string name="login_password_ocultar">Ocultar contraseña</string>
     <string name="login_password_mostrar">Mostrar contraseña</string>
 </resources>

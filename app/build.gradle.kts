@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
     alias(libs.plugins.jetbrainsKotlinSerialization)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -73,6 +74,10 @@ dependencies {
     // Cloud Storage para Firebase
     implementation(libs.firebase.storage)
 
+    // Firebase Crashlytics (para registro de errores)
+    implementation(libs.firebase.crashlytics.ndk)
+
+
     // Firebase Analytics (para tracking de comportamiento y recomendaciones)
     implementation(libs.firebase.analytics)
 
@@ -83,6 +88,8 @@ dependencies {
     // Firebase UI (opcional, pero puede acelerar el desarrollo de UI de Auth/Firestore)
     // implementation("com.firebaseui:firebase-ui-auth:8.0.2")
     // implementation("com.firebaseui:firebase-ui-firestore:8.0.2")
+
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
