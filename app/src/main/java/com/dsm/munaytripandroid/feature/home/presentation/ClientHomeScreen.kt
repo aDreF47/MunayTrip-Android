@@ -158,7 +158,7 @@ fun ClientHomeScreen(
             ) {
                 Icon(Icons.Default.Explore, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Ver todas las ofertas", fontWeight = FontWeight.Bold)
+                Text("Ver ofertas", fontWeight = FontWeight.Bold)
             }
 
             // Info card
