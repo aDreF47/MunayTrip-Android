@@ -2,4 +2,5 @@
     <string name="app_name">Munay Trip</string>
     <string name="login_password_ocultar">Ocultar contraseña</string>
     <string name="login_password_mostrar">Mostrar contraseña</string>
+    <string name="default_web_client_id">893777256018-nn76pg63tneor1ib05kjv021cj0vv347.apps.googleusercontent.com</string>
 </resources>

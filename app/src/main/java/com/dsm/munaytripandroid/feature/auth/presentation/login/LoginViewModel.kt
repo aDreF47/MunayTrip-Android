@@ -10,6 +10,10 @@ import com.dsm.munaytripandroid.feature.auth.data.remote.ProviderFirestoreDataSo
 import com.dsm.munaytripandroid.feature.auth.data.remote.ClientFirestoreDataSource
 import com.dsm.munaytripandroid.feature.auth.data.repository.AuthRepositoryImpl
 import com.dsm.munaytripandroid.feature.auth.domain.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +21,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
+
+    private val auth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
 
     // Repository (por ahora sin DI)
     private val authRepository: AuthRepository = AuthRepositoryImpl(
@@ -99,5 +106,54 @@ class LoginViewModel : ViewModel() {
 
     fun resetLoginSuccess() {
         _loginSuccess.value = false
+    }
+
+    fun signInWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnSuccessListener { result ->
+                val user = result.user
+                user?.let {
+                    val fullName = it.displayName ?: ""
+                    val parts = fullName.split(" ", limit = 2)
+                    val firstName = parts.getOrNull(0) ?: ""
+                    val lastName = parts.getOrNull(1) ?: ""
+                    val photo = it.photoUrl?.toString()
+
+                    createUserDocument(
+                        uid = it.uid,
+                        firstName = firstName,
+                        lastName = lastName,
+                        email = it.email ?: "",
+                        photoUrl = photo
+                    )
+                }
+                _uiState.update { it.copy(isLoading = false) }
+                _loginSuccess.value = true
+            }
+            .addOnFailureListener { e ->
+                setError("Google Auth failed: ${e.message}")
+            }
+    }
+
+    private fun createUserDocument(
+        uid: String,
+        firstName: String,
+        lastName: String,
+        email: String,
+        photoUrl: String? = null
+    ) {
+        val data = hashMapOf(
+            "firstName" to firstName,
+            "lastName" to lastName,
+            "email" to email,
+            "photoUrl" to (photoUrl ?: "")
+        )
+        firestore.collection("users").document(uid)
+            .set(data, SetOptions.merge())
+    }
+
+    fun setError(msg: String?) {
+        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg)
     }
 }

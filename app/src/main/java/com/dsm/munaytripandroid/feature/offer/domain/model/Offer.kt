@@ -33,7 +33,14 @@ data class Offer(
     val createdAt: Timestamp? = null,
     val updatedAt: Timestamp? = null,
     val estado: String = "activo"  // activo, pausado, finalizado
-)
+){
+    constructor() : this(
+        "", "", "", "", "", OfferCategory.CULTURAL, emptyList(),
+        OfferLocation(), "", emptyList(), 0.0, false, 0, 0,
+        emptyList(), emptyList(), 0, emptyList(), emptyList(),
+        OfferType.EVENT, false, "", null, null, "activo"
+    )
+}
 
 data class OfferLocation(
     val lat: Double = 0.0,

@@ -268,8 +268,9 @@ fun OfferCard(
                         )
                     } else {
                         if (offer.descuento > 0) {
+                            val precioFinal = offer.precio * (1 - offer.descuento / 100.0)
                             Text(
-                                text = "S/ ${offer.precio * (1 - offer.descuento / 100.0)}",
+                                text = "S/ ${String.format("%.2f", precioFinal)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF1A7FA6)
@@ -279,7 +280,7 @@ fun OfferCard(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "S/ ${offer.precio}",
+                                    text = "S/ ${String.format("%.2f", offer.precio)}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color.Gray,
                                     textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
@@ -299,7 +300,7 @@ fun OfferCard(
                             }
                         } else {
                             Text(
-                                text = "S/ ${offer.precio}",
+                                text = "S/ ${String.format("%.2f", offer.precio)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF1A7FA6)
@@ -313,8 +314,14 @@ fun OfferCard(
                     Column(
                         horizontalAlignment = Alignment.End
                     ) {
-                        val disponibilidad = offer.cuposDisponibles.toFloat() / offer.capacidadMaxima
+                        val disponibilidad = if (offer.cuposDisponibles > 0) {
+                            offer.cuposDisponibles.toFloat() / offer.capacidadMaxima
+                        } else {
+                            0f
+                        }
+
                         val color = when {
+                            offer.cuposDisponibles <= 0 -> Color(0xFFF44336)
                             disponibilidad > 0.5f -> Color(0xFF4CAF50)
                             disponibilidad > 0.2f -> Color(0xFFFF9800)
                             else -> Color(0xFFF44336)
@@ -330,9 +337,14 @@ fun OfferCard(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "${offer.cuposDisponibles} cupos",
+                            text = when {
+                                offer.cuposDisponibles <= 0 -> "❌ Agotado"
+                                offer.cuposDisponibles == 1 -> "⚠️ Último cupo"
+                                offer.cuposDisponibles <= 3 -> "⚠️ ${offer.cuposDisponibles} cupos"
+                                else -> "${offer.cuposDisponibles} cupos"
+                            },
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray
+                            color = color
                         )
                     }
                 }

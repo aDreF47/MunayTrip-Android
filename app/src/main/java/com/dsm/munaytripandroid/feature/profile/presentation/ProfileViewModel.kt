@@ -19,7 +19,6 @@ import kotlinx.coroutines.launch
 
 class ProfileViewModel : ViewModel() {
 
-    // Repositorios (instanciados manualmente, igual que en RegisterViewModel)
     private val authRepository = AuthRepositoryImpl(
         FirebaseAuthDataSource(),
         FirestoreDataSource(),
@@ -113,4 +112,35 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
+
+    fun updateProfilePhoto(photoUrl: String) {
+        val userProfile = _uiState.value.userProfile
+        if (userProfile != null) {
+            _uiState.update { it.copy(isLoading = true) }
+
+            viewModelScope.launch {
+                when (val result = profileRepository.updateProfilePhoto(
+                    userId = userProfile.user.uid,
+                    userType = userProfile.userType,
+                    photoUrl = photoUrl
+                )) {
+                    is Result.Success -> {
+                        loadProfile()
+                    }
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = "Error al actualizar foto"
+                            )
+                        }
+                    }
+
+                    Result.Loading -> TODO()
+                }
+
+            }
+        }
+    }
+
 }
