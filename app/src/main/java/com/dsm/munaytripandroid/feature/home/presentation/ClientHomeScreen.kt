@@ -4,22 +4,33 @@ import android.Manifest
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.Card
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.sp
 import com.dsm.munaytripandroid.core.location.LocationManager
 import com.dsm.munaytripandroid.feature.client.data.repository.ClientRepository
 import com.dsm.munaytripandroid.feature.client.domain.model.ClientLocation
@@ -35,9 +46,26 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
+import kotlin.math.*
 
 private val MunayPrimary = Color(0xFF1A7FA6)
 private val MunaySecondary = Color(0xFF4DB6E8)
+private val MunayAccent = Color(0xFFFF6B6B)
+private val MunaySuccess = Color(0xFF4ECDC4)
+
+// Modelo temporal para ofertas (reemplazar con tu modelo real)
+data class OfferPreview(
+    val id: String,
+    val title: String,
+    val provider: String,
+    val price: Double,
+    val rating: Float,
+    val distance: Double, // en km
+    val category: String,
+    val imageUrl: String? = null,
+    val lat: Double,
+    val lng: Double
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,15 +88,46 @@ fun ClientHomeScreen(
     val clientRepository = remember { ClientRepository() }
     val scope = rememberCoroutineScope()
 
-    // Estado para búsqueda
+    // Estados de búsqueda
     var searchQuery by remember { mutableStateOf("") }
     var suggestions by remember { mutableStateOf<List<String>>(emptyList()) }
     val geocoder = remember { android.location.Geocoder(context) }
-
-    // NUEVO: Variable para controlar si debemos mover el mapa
     var shouldAnimateMap by remember { mutableStateOf(false) }
 
-    // Launcher para pedir permisos
+    // Estados de filtros
+    var selectedDistance by remember { mutableStateOf(5.0) } // km
+    var selectedCategory by remember { mutableStateOf("Todas") }
+    var showFilters by remember { mutableStateOf(false) }
+
+    // MOCK DATA - Reemplazar con datos reales de Firebase
+    val mockOffers = remember {
+        listOf(
+            OfferPreview("1", "Tour Machu Picchu", "Inca Adventures", 150.0, 4.8f, 1.2, "Tours", null, -13.163141, -72.545128),
+            OfferPreview("2", "City Tour Lima", "Lima Explorer", 50.0, 4.5f, 0.8, "Tours", null, -12.046374, -77.042793),
+            OfferPreview("3", "Restaurante El Chalán", "Gastronomía Perú", 35.0, 4.9f, 2.3, "Gastronomía", null, -12.046374, -77.042793),
+            OfferPreview("4", "Hotel Costa Verde", "Hoteles Premium", 120.0, 4.7f, 3.1, "Hospedaje", null, -12.046374, -77.042793),
+            OfferPreview("5", "Parapente en Lima", "Aventura Extrema", 80.0, 4.6f, 4.5, "Aventura", null, -12.046374, -77.042793),
+        )
+    }
+
+    // Filtrar ofertas por distancia
+    val filteredOffers = remember(clientLocation, selectedDistance, selectedCategory) {
+        mockOffers.filter { offer ->
+            val distance = clientLocation?.let {
+                calculateDistance(it.lat, it.lng, offer.lat, offer.lng)
+            } ?: 0.0
+
+            val distanceMatch = distance <= selectedDistance
+            val categoryMatch = selectedCategory == "Todas" || offer.category == selectedCategory
+
+            distanceMatch && categoryMatch
+        }.sortedBy { offer ->
+            clientLocation?.let {
+                calculateDistance(it.lat, it.lng, offer.lat, offer.lng)
+            } ?: Double.MAX_VALUE
+        }
+    }
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -80,14 +139,13 @@ fun ClientHomeScreen(
                 if (location != null) {
                     clientRepository.updateClientLocation(currentUser.uid, location)
                     clientLocation = location
-                    shouldAnimateMap = true // Activar animación
+                    shouldAnimateMap = true
                 }
                 isLoadingLocation = false
             }
         }
     }
 
-    // Cargar ubicación guardada al iniciar (SOLO UNA VEZ)
     LaunchedEffect(currentUser?.uid) {
         currentUser?.let { user ->
             val savedLocation = clientRepository.getClientLocation(user.uid)
@@ -106,10 +164,9 @@ fun ClientHomeScreen(
         }
     }
 
-    // ✅ FIX 1: Autocomplete con debounce SIN interferir con el input
     LaunchedEffect(searchQuery) {
         if (searchQuery.length > 2) {
-            delay(500) // Debounce de 500ms
+            delay(500)
             try {
                 val client = Places.createClient(context)
                 val request = FindAutocompletePredictionsRequest.builder()
@@ -120,9 +177,7 @@ fun ClientHomeScreen(
                         suggestions = response.autocompletePredictions
                             .map { it.getFullText(null).toString() }
                     }
-                    .addOnFailureListener {
-                        suggestions = emptyList()
-                    }
+                    .addOnFailureListener { suggestions = emptyList() }
             } catch (e: Exception) {
                 Log.e("Autocomplete", "Error: ${e.message}")
                 suggestions = emptyList()
@@ -136,17 +191,39 @@ fun ClientHomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = "Munay Trip",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Tu compañero de viajes",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(MunayPrimary, MunaySecondary)
+                                    ),
+                                    shape = RoundedCornerShape(8.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Explore,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = "Munay Trip",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = clientLocation?.ciudad ?: "Ubicación desconocida",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -202,345 +279,958 @@ fun ClientHomeScreen(
         },
         containerColor = Color(0xFFF5F9FB)
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(paddingValues),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(16.dp)
         ) {
-            // ✅ FIX 2: Campo de búsqueda sin animaciones que interfieran
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Buscar ubicación...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            Row {
-                                // Botón para limpiar
-                                IconButton(onClick = {
-                                    searchQuery = ""
-                                    suggestions = emptyList()
-                                }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "Limpiar")
-                                }
-                                // Botón para buscar
-                                IconButton(onClick = {
-                                    if (searchQuery.isNotBlank()) {
-                                        scope.launch {
-                                            try {
-                                                isLoadingLocation = true
-                                                val results = geocoder.getFromLocationName(searchQuery, 1)
-                                                if (!results.isNullOrEmpty()) {
-                                                    val location = results.first()
-                                                    clientLocation = ClientLocation(
-                                                        location.latitude,
-                                                        location.longitude,
-                                                        location.locality ?: searchQuery,
-                                                        location.countryName ?: "Desconocido"
-                                                    )
-
-                                                    // Actualizar en Firebase
-                                                    currentUser?.let {
-                                                        clientRepository.updateClientLocation(
-                                                            it.uid,
-                                                            clientLocation!!
-                                                        )
-                                                    }
-
-                                                    // ✅ ACTIVAR animación del mapa
-                                                    shouldAnimateMap = true
-                                                    suggestions = emptyList()
-                                                }
-                                            } catch (e: IOException) {
-                                                Log.e("Geocoder", "Error: ${e.message}")
-                                            } finally {
-                                                isLoadingLocation = false
-                                            }
-                                        }
-                                    }
-                                }) {
-                                    Icon(Icons.Default.Send, contentDescription = "Buscar")
-                                }
-                            }
-                        }
+            // Barra de búsqueda mejorada
+            item {
+                SearchBarSection(
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = { searchQuery = it },
+                    onClear = {
+                        searchQuery = ""
+                        suggestions = emptyList()
                     },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color.White)
-                )
-            }
-
-            // ✅ FIX 3: Dropdown de sugerencias sin interferir
-            if (suggestions.isNotEmpty()) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column {
-                        suggestions.take(5).forEach { suggestion ->
-                            TextButton(
-                                onClick = {
-                                    searchQuery = suggestion
-                                    suggestions = emptyList()
-                                    // Buscar automáticamente al seleccionar
-                                    scope.launch {
-                                        try {
-                                            isLoadingLocation = true
-                                            val results = geocoder.getFromLocationName(suggestion, 1)
-                                            if (!results.isNullOrEmpty()) {
-                                                val location = results.first()
-                                                clientLocation = ClientLocation(
-                                                    location.latitude,
-                                                    location.longitude,
-                                                    location.locality ?: suggestion,
-                                                    location.countryName ?: "Desconocido"
-                                                )
-                                                currentUser?.let {
-                                                    clientRepository.updateClientLocation(
-                                                        it.uid,
-                                                        clientLocation!!
-                                                    )
-                                                }
-                                                shouldAnimateMap = true
-                                            }
-                                        } catch (e: IOException) {
-                                            Log.e("Geocoder", "Error: ${e.message}")
-                                        } finally {
-                                            isLoadingLocation = false
+                    onSearch = {
+                        if (searchQuery.isNotBlank()) {
+                            scope.launch {
+                                try {
+                                    isLoadingLocation = true
+                                    val results = geocoder.getFromLocationName(searchQuery, 1)
+                                    if (!results.isNullOrEmpty()) {
+                                        val location = results.first()
+                                        clientLocation = ClientLocation(
+                                            location.latitude,
+                                            location.longitude,
+                                            location.locality ?: searchQuery,
+                                            location.countryName ?: "Desconocido"
+                                        )
+                                        currentUser?.let {
+                                            clientRepository.updateClientLocation(it.uid, clientLocation!!)
                                         }
+                                        shouldAnimateMap = true
+                                        suggestions = emptyList()
                                     }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        Icons.Default.LocationOn,
-                                        contentDescription = null,
-                                        tint = MunayPrimary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = suggestion,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                            }
-                            if (suggestion != suggestions.last()) {
-                                Divider()
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Welcome Header
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(MunayPrimary, MunaySecondary)
-                            )
-                        )
-                        .padding(24.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = "¡Hola, $displayName! 👋",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "¿Listo para tu próxima aventura?",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
-                    }
-                }
-            }
-
-            // Mapa
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
-                        .background(
-                            color = if (clientLocation != null) MunayPrimary.copy(alpha = 0.1f)
-                            else Color(0xFFF5F5F5),
-                            shape = RoundedCornerShape(16.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    when {
-                        isLoadingLocation -> {
-                            CircularProgressIndicator(color = MunayPrimary)
-                        }
-                        clientLocation != null -> {
-                            // ✅ FIX 4: Pasar la bandera de animación
-                            UserLocationMap(
-                                lat = clientLocation!!.lat,
-                                lng = clientLocation!!.lng,
-                                city = clientLocation!!.ciudad,
-                                country = clientLocation!!.pais,
-                                shouldAnimate = shouldAnimateMap,
-                                onAnimationComplete = { shouldAnimateMap = false },
-                                onRequestCurrentLocation = {
-                                    locationPermissionLauncher.launch(
-                                        arrayOf(
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION
-                                        )
-                                    )
-                                }
-                            )
-                        }
-                        else -> {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text(
-                                    text = "📍",
-                                    style = MaterialTheme.typography.displayMedium
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Ubicación no disponible",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                TextButton(
-                                    onClick = {
-                                        locationPermissionLauncher.launch(
-                                            arrayOf(
-                                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                                Manifest.permission.ACCESS_COARSE_LOCATION
-                                            )
-                                        )
-                                    }
-                                ) {
-                                    Icon(Icons.Default.MyLocation, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Activar ubicación")
+                                } catch (e: IOException) {
+                                    Log.e("Geocoder", "Error: ${e.message}")
+                                } finally {
+                                    isLoadingLocation = false
                                 }
                             }
                         }
                     }
-                }
-            }
-
-            // Resto del código sin cambios...
-            Button(
-                onClick = onNavigateToOffersList,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MunayPrimary
                 )
-            ) {
-                Icon(Icons.Default.Explore, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Ver todas las ofertas", fontWeight = FontWeight.Bold)
             }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "🎯 Rol: Cliente",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Explora ofertas turísticas, reserva experiencias y guarda tus favoritos.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
+            // Sugerencias de búsqueda
+            if (suggestions.isNotEmpty()) {
+                item {
+                    SuggestionsCard(
+                        suggestions = suggestions,
+                        onSuggestionClick = { suggestion ->
+                            searchQuery = suggestion
+                            suggestions = emptyList()
+                            scope.launch {
+                                try {
+                                    isLoadingLocation = true
+                                    val results = geocoder.getFromLocationName(suggestion, 1)
+                                    if (!results.isNullOrEmpty()) {
+                                        val location = results.first()
+                                        clientLocation = ClientLocation(
+                                            location.latitude,
+                                            location.longitude,
+                                            location.locality ?: suggestion,
+                                            location.countryName ?: "Desconocido"
+                                        )
+                                        currentUser?.let {
+                                            clientRepository.updateClientLocation(it.uid, clientLocation!!)
+                                        }
+                                        shouldAnimateMap = true
+                                    }
+                                } catch (e: IOException) {
+                                    Log.e("Geocoder", "Error: ${e.message}")
+                                } finally {
+                                    isLoadingLocation = false
+                                }
+                            }
+                        }
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            // Welcome Card con stats
+            item {
+                WelcomeCard(
+                    displayName = displayName,
+                    nearbyOffersCount = filteredOffers.size
+                )
+            }
 
-            Text(
-                text = "FASE 2 - Sistema de Ofertas Completo ✅",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            // Mapa con ubicación
+            item {
+                LocationMapCard(
+                    clientLocation = clientLocation,
+                    isLoadingLocation = isLoadingLocation,
+                    shouldAnimateMap = shouldAnimateMap,
+                    onAnimationComplete = { shouldAnimateMap = false },
+                    onRequestCurrentLocation = {
+                        locationPermissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    }
+                )
+            }
+
+            // Filtros de distancia y categoría
+            item {
+                FilterSection(
+                    selectedDistance = selectedDistance,
+                    onDistanceChange = { selectedDistance = it },
+                    selectedCategory = selectedCategory,
+                    onCategoryChange = { selectedCategory = it },
+                    showFilters = showFilters,
+                    onToggleFilters = { showFilters = !showFilters }
+                )
+            }
+
+            // Promociones destacadas
+            item {
+                SectionHeader(
+                    title = "🔥 Promociones Destacadas",
+                    subtitle = "Ofertas especiales cerca de ti",
+                    onSeeAll = onNavigateToOffersList
+                )
+            }
+
+            item {
+                PromotionsCarousel(
+                    offers = filteredOffers.take(3),
+                    onOfferClick = onNavigateToOfferDetail
+                )
+            }
+
+            // Ofertas más cercanas
+            item {
+                SectionHeader(
+                    title = "📍 Cerca de Ti",
+                    subtitle = "${filteredOffers.size} ofertas en ${selectedDistance}km",
+                    onSeeAll = onNavigateToOffersList
+                )
+            }
+
+            // Lista de ofertas cercanas
+            items(filteredOffers.take(5)) { offer ->
+                OfferCard(
+                    offer = offer,
+                    userLocation = clientLocation,
+                    onClick = { onNavigateToOfferDetail(offer.id) }
+                )
+            }
+
+            // Categorías rápidas
+            item {
+                SectionHeader(
+                    title = "🎯 Categorías",
+                    subtitle = "Explora por tipo de experiencia"
+                )
+            }
+
+            item {
+                CategoriesGrid(
+                    onCategoryClick = { category ->
+                        selectedCategory = category
+                        onNavigateToOffersList()
+                    }
+                )
+            }
+
+            // Espaciado final
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 
-    // Logout Dialog (sin cambios)
     if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Logout,
-                    contentDescription = null,
-                    tint = MunayPrimary,
-                    modifier = Modifier.size(48.dp)
-                )
-            },
-            title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold) },
-            text = { Text("¿Estás seguro de que deseas cerrar sesión, $displayName?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showLogoutDialog = false
-                        onLogout()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MunayPrimary)
-                ) {
-                    Text("Cerrar sesión")
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancelar", color = MunayPrimary)
-                }
+        LogoutDialog(
+            displayName = displayName,
+            onDismiss = { showLogoutDialog = false },
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
             }
         )
     }
 }
 
-// ✅ FIX 5: Componente de mapa corregido
+@Composable
+fun SearchBarSection(
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onClear: () -> Unit,
+    onSearch: () -> Unit
+) {
+    OutlinedTextField(
+        value = searchQuery,
+        onValueChange = onSearchQueryChange,
+        placeholder = { Text("¿A dónde quieres ir?") },
+        leadingIcon = {
+            Icon(Icons.Default.Search, contentDescription = null, tint = MunayPrimary)
+        },
+        trailingIcon = {
+            if (searchQuery.isNotEmpty()) {
+                Row {
+                    IconButton(onClick = onClear) {
+                        Icon(Icons.Default.Clear, "Limpiar")
+                    }
+                    IconButton(onClick = onSearch) {
+                        Icon(Icons.Default.Send, "Buscar", tint = MunayPrimary)
+                    }
+                }
+            }
+        },
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(24.dp)),
+        shape = RoundedCornerShape(24.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            focusedBorderColor = MunayPrimary,
+            unfocusedBorderColor = Color.Transparent
+        )
+    )
+}
+
+@Composable
+fun SuggestionsCard(
+    suggestions: List<String>,
+    onSuggestionClick: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column {
+            suggestions.take(5).forEachIndexed { index, suggestion ->
+                TextButton(
+                    onClick = { onSuggestionClick(suggestion) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = MunayPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = suggestion,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                if (index < suggestions.lastIndex) {
+                    HorizontalDivider()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WelcomeCard(displayName: String, nearbyOffersCount: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(MunayPrimary, MunaySecondary)
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "¡Hola, $displayName! 👋",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Explora nuevas aventuras",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                }
+
+                Card(
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White.copy(alpha = 0.2f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "$nearbyOffersCount",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Ofertas",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LocationMapCard(
+    clientLocation: ClientLocation?,
+    isLoadingLocation: Boolean,
+    shouldAnimateMap: Boolean,
+    onAnimationComplete: () -> Unit,
+    onRequestCurrentLocation: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            when {
+                isLoadingLocation -> {
+                    CircularProgressIndicator(color = MunayPrimary)
+                }
+                clientLocation != null -> {
+                    UserLocationMap(
+                        lat = clientLocation.lat,
+                        lng = clientLocation.lng,
+                        city = clientLocation.ciudad,
+                        country = clientLocation.pais,
+                        shouldAnimate = shouldAnimateMap,
+                        onAnimationComplete = onAnimationComplete,
+                        onRequestCurrentLocation = onRequestCurrentLocation
+                    )
+                }
+                else -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOff,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Ubicación no disponible",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = onRequestCurrentLocation,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MunayPrimary
+                            )
+                        ) {
+                            Icon(Icons.Default.MyLocation, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Activar ubicación")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterSection(
+    selectedDistance: Double,
+    onDistanceChange: (Double) -> Unit,
+    selectedCategory: String,
+    onCategoryChange: (String) -> Unit,
+    showFilters: Boolean,
+    onToggleFilters: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "🎛️ Filtros",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onToggleFilters) {
+                    Icon(
+                        if (showFilters) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null
+                    )
+                }
+            }
+
+            AnimatedVisibility(visible = showFilters) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Filtro de distancia
+                    Column {
+                        Text(
+                            text = "Distancia: ${selectedDistance.toInt()} km",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MunayPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Slider(
+                            value = selectedDistance.toFloat(),
+                            onValueChange = { onDistanceChange(it.toDouble()) },
+                            valueRange = 1f..50f,
+                            steps = 48,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MunayPrimary,
+                                activeTrackColor = MunayPrimary
+                            )
+                        )
+                    }
+
+                    // Filtro de categorías
+                    Column {
+                        Text(
+                            text = "Categoría",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(listOf("Todas", "Tours", "Gastronomía", "Hospedaje", "Aventura")) { category ->
+                                FilterChip(
+                                    selected = selectedCategory == category,
+                                    onClick = { onCategoryChange(category) },
+                                    label = { Text(category) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MunayPrimary,
+                                        selectedLabelColor = Color.White
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SectionHeader(
+    title: String,
+    subtitle: String? = null,
+    onSeeAll: (() -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            subtitle?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
+        }
+        onSeeAll?.let {
+            TextButton(onClick = it) {
+                Text("Ver todo", color = MunayPrimary)
+                Icon(Icons.Default.ChevronRight, null, tint = MunayPrimary)
+            }
+        }
+    }
+}
+
+@Composable
+fun PromotionsCarousel(
+    offers: List<OfferPreview>,
+    onOfferClick: (String) -> Unit
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(offers) { offer ->
+            PromotionCard(offer = offer, onClick = { onOfferClick(offer.id) })
+        }
+    }
+}
+@Composable
+fun PromotionCard(offer: OfferPreview, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .width(280.dp)
+            .height(180.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Placeholder para imagen
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(MunaySecondary, MunayPrimary)
+                        )
+                    )
+            )
+
+            // Overlay con info
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
+                        )
+                    )
+            )
+
+            // Badge de descuento (arriba a la derecha)
+            Card(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(12.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(containerColor = MunayAccent)
+            ) {
+                Text(
+                    text = "-20%",
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            // Contenido principal
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Rating badge (arriba a la izquierda)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White.copy(alpha = 0.9f)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Color(0xFFFFC107),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = offer.rating.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // Información (abajo)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = offer.category,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MunaySuccess,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = offer.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "S/ ${offer.price}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "${String.format("%.1f", offer.distance)} km",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OfferCard(
+    offer: OfferPreview,
+    userLocation: ClientLocation?,
+    onClick: () -> Unit
+) {
+    val distance = userLocation?.let {
+        calculateDistance(it.lat, it.lng, offer.lat, offer.lng)
+    } ?: 0.0
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Imagen placeholder
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(MunaySecondary.copy(alpha = 0.3f), MunayPrimary.copy(alpha = 0.3f))
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Image,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = MunayPrimary.copy(alpha = 0.5f)
+                )
+            }
+
+            // Información
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = offer.category,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MunayPrimary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .background(
+                                    MunayPrimary.copy(alpha = 0.1f),
+                                    RoundedCornerShape(4.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Color(0xFFFFC107),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = offer.rating.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = offer.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = offer.provider,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "S/ ${offer.price}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MunayPrimary
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .background(
+                                MunaySuccess.copy(alpha = 0.1f),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = MunaySuccess,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "${String.format("%.1f", distance)} km",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MunaySuccess
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoriesGrid(onCategoryClick: (String) -> Unit) {
+    val categories = listOf(
+        "Tours" to Icons.Default.Explore,
+        "Gastronomía" to Icons.Default.Restaurant,
+        "Hospedaje" to Icons.Default.Hotel,
+        "Aventura" to Icons.Default.Terrain,
+        "Cultura" to Icons.Default.Museum,
+        "Transporte" to Icons.Default.DirectionsCar
+    )
+
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(categories) { (category, icon) ->
+            CategoryCard(
+                category = category,
+                icon = icon,
+                onClick = { onCategoryClick(category) }
+            )
+        }
+    }
+}
+@Composable
+fun CategoryCard(
+    category: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier  // Cambia esta línea
+            .width(120.dp)
+            .height(100.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier  // Y esta línea también
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier  // Y esta
+                    .size(48.dp)
+                    .background(
+                        MunayPrimary.copy(alpha = 0.1f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MunayPrimary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = category,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun LogoutDialog(
+    displayName: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Default.Logout,
+                contentDescription = null,
+                tint = MunayAccent,
+                modifier = Modifier.size(48.dp)
+            )
+        },
+        title = {
+            Text(
+                text = "¿Cerrar sesión?",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = "Hasta pronto, $displayName. ¿Estás seguro de que quieres cerrar sesión?",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MunayAccent
+                )
+            ) {
+                Text("Cerrar sesión")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancelar", color = MunayPrimary)
+            }
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(24.dp)
+    )
+}
+
 @Composable
 fun UserLocationMap(
     lat: Double,
@@ -551,64 +1241,101 @@ fun UserLocationMap(
     onAnimationComplete: () -> Unit,
     onRequestCurrentLocation: () -> Unit
 ) {
+    val location = LatLng(lat, lng)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(lat, lng), 13f)
+        position = CameraPosition.fromLatLngZoom(location, 13f)
     }
 
-    // ✅ SOLO animar cuando shouldAnimate sea true
     LaunchedEffect(shouldAnimate) {
         if (shouldAnimate) {
             cameraPositionState.animate(
-                update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
-                    LatLng(lat, lng),
-                    15f
-                ),
+                update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 13f),
                 durationMs = 1000
             )
             onAnimationComplete()
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "$city, $country",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .clip(RoundedCornerShape(16.dp))
+    Box(modifier = Modifier.fillMaxSize()) {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            uiSettings = com.google.maps.android.compose.MapUiSettings(
+                zoomControlsEnabled = false,
+                myLocationButtonEnabled = false
+            )
         ) {
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
-            ) {
-                Marker(
-                    state = MarkerState(position = LatLng(lat, lng)),
-                    title = city,
-                    snippet = country
-                )
-            }
+            Marker(
+                state = MarkerState(position = location),
+                title = city,
+                snippet = country
+            )
+        }
 
-            FloatingActionButton(
-                onClick = onRequestCurrentLocation,
-                containerColor = MunayPrimary,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
+        // Botón de mi ubicación flotante
+        FloatingActionButton(
+            onClick = onRequestCurrentLocation,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .size(48.dp),
+            containerColor = Color.White,
+            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
+        ) {
+            Icon(
+                Icons.Default.MyLocation,
+                contentDescription = "Mi ubicación",
+                tint = MunayPrimary
+            )
+        }
+
+        // Info card en la parte superior
+        Card(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White.copy(alpha = 0.95f)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.MyLocation, contentDescription = "Mi ubicación", tint = Color.White)
+                Icon(
+                    Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = MunayPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Column {
+                    Text(
+                        text = city,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = country,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray
+                    )
+                }
             }
         }
     }
+}
+
+// Función helper para calcular distancia entre dos puntos
+fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+    val r = 6371 // Radio de la Tierra en km
+    val dLat = Math.toRadians(lat2 - lat1)
+    val dLon = Math.toRadians(lon2 - lon1)
+    val a = sin(dLat / 2) * sin(dLat / 2) +
+            cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+            sin(dLon / 2) * sin(dLon / 2)
+    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return r * c
 }
