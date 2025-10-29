@@ -60,6 +60,14 @@ data class EditOffer(
 @Serializable
 object Profile
 
+// ==================== BOOKINGS ====================
+@Serializable
+object Booking
+
+// ==================== FAVORITES ====================
+@Serializable
+object Favorite
+
 // ==================== SEARCH (Futuro) ====================
 //@Serializable
 //object Search

@@ -9,6 +9,8 @@ import com.dsm.munaytripandroid.feature.onboarding.presentation.splash.SplashScr
 import com.dsm.munaytripandroid.feature.auth.presentation.login.LoginScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.register.RegisterScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.register.steps.RegisterMailStepScreen
+import com.dsm.munaytripandroid.feature.bookings.presentation.BookingsScreen
+import com.dsm.munaytripandroid.feature.bookings.presentation.favorites.FavoritesScreen
 import com.dsm.munaytripandroid.feature.home.presentation.ClientHomeScreen
 import com.dsm.munaytripandroid.feature.home.presentation.HomeScreen
 import com.dsm.munaytripandroid.feature.home.presentation.ProviderHomeScreen
@@ -150,6 +152,9 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                 onNavigateToOfferDetail = { offerId ->
                     navController.navigate(OfferDetail(offerId))
                 },
+                onNavigateToFavorites = {
+                    navController.navigate(Favorite)
+                },
                 onLogout = {
                     auth.signOut()
                     navController.navigate(Initial) {
@@ -256,6 +261,41 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
             ProfileScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Initial) {
+                        popUpTo(Profile) { inclusive = true }
+                    }
+                },
+                onNavigateToBookings = {
+                    navController.navigate(Booking)
+                },
+                onNavigateToFavorites = {
+                    navController.navigate(Favorite)
+                }
+            )
+        }
+
+        // ========== BOOKINGS SCREEN ==========
+        composable<Booking> {
+            BookingsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToOfferDetail = { offerId ->
+                    navController.navigate(OfferDetail(offerId))
+                }
+            )
+        }
+
+        // ========== FAVORITES SCREEN ==========
+        composable<Favorite> {
+            FavoritesScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToOfferDetail = { offerId ->
+                    navController.navigate(OfferDetail(offerId))
                 }
             )
         }
