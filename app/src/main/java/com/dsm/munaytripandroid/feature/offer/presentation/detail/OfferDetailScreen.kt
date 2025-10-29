@@ -1,5 +1,7 @@
 package com.dsm.munaytripandroid.feature.offer.presentation.detail
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,9 +17,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 
 private val MunayPrimary = Color(0xFF1A7FA6)
 private val MunaySecondary = Color(0xFF4DB6E8)
@@ -409,6 +418,7 @@ fun OfferDetailContent(offer: com.dsm.munaytripandroid.feature.offer.domain.mode
             item {
                 SectionCard(title = "Ubicación") {
                     Column {
+                        val context = LocalContext.current
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -446,10 +456,41 @@ fun OfferDetailContent(offer: com.dsm.munaytripandroid.feature.offer.domain.mode
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "🗺️ Mapa (Próximamente)",
-                                color = Color.Gray
-                            )
+
+
+                            val markerPosition = LatLng(offer.ubicacion.lat, offer.ubicacion.lng)
+
+                            // ✅ Recordar el estado del marcador
+                            val markerState = remember {
+                                MarkerState(position = markerPosition)
+                            }
+
+                            // ✅ (Opcional) Recordar el estado de la cámara
+                            val cameraPositionState = rememberCameraPositionState {
+                                position = CameraPosition.fromLatLngZoom(markerPosition, 14f)
+                            }
+
+                            GoogleMap(
+                                modifier = Modifier.fillMaxSize(),
+                                cameraPositionState = cameraPositionState
+                            ) {
+                                Marker(
+                                    state = markerState
+                                )
+                            }
+
+
+                        }
+                        Button(
+                            onClick = {
+                                val gmmIntentUri = Uri.parse("google.navigation:q=${offer.ubicacion.lat},${offer.ubicacion.lng}")
+                                val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                                mapIntent.setPackage("com.google.android.apps.maps")
+                                context.startActivity(mapIntent)
+                            },
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            Text("Abrir en Google Maps")
                         }
                     }
                 }
