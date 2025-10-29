@@ -29,6 +29,7 @@ fun ClientHomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToOffersList: () -> Unit,
     onNavigateToOfferDetail: (String) -> Unit,
+    onNavigateToFavorites: () -> Unit,
     onLogout: () -> Unit
 ) {
     val currentUser = auth.currentUser
@@ -91,7 +92,7 @@ fun ClientHomeScreen(
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
+                    onClick = onNavigateToFavorites,
                     icon = { Icon(Icons.Default.BookmarkBorder, "Guardados") },
                     label = { Text("Guardados") }
                 )

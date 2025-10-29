@@ -3,7 +3,6 @@ package com.dsm.munaytripandroid.feature.offer.presentation.detail
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -81,7 +80,6 @@ fun OfferDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Precio
                         Column {
                             if (uiState.offer!!.esGratis) {
                                 Text(
@@ -113,27 +111,66 @@ fun OfferDetailScreen(
                                     )
                                 }
                             }
+
+                            if (uiState.offer!!.cuposDisponibles <= 0) {
+                                Text(
+                                    text = "❌ Sin cupos disponibles",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.Red,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            } else if (uiState.offer!!.cuposDisponibles <= 3) {
+                                Text(
+                                    text = "⚠️ Últimos ${uiState.offer!!.cuposDisponibles} cupos",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFFFF9800),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
 
                         // Botón Reservar
                         Button(
-                            onClick = onBookOffer,
+                            onClick = {
+                                viewModel.bookOffer(onBookOffer)
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(start = 16.dp)
                                 .height(56.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MunayPrimary
+                                containerColor = when {
+                                    uiState.isBooked -> Color(0xFF4CAF50)
+                                    uiState.offer!!.cuposDisponibles <= 0 -> Color.Gray
+                                    else -> MunayPrimary
+                                }
                             ),
-                            enabled = uiState.offer!!.cuposDisponibles > 0
+                            enabled = !uiState.isBooked &&
+                                    uiState.offer!!.cuposDisponibles > 0 &&
+                                    !uiState.isLoading
                         ) {
-                            Icon(Icons.Default.BookmarkAdd, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (uiState.offer!!.cuposDisponibles > 0) "Reservar" else "Sin cupos",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                            if (uiState.isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    if (uiState.isBooked) Icons.Default.Check else Icons.Default.BookmarkAdd,
+                                    contentDescription = null
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = when {
+                                        uiState.isBooked -> "Reservado"
+                                        uiState.offer!!.cuposDisponibles > 0 -> "Reservar"
+                                        else -> "Sin cupos"
+                                    },
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
                         }
                     }
                 }
@@ -388,7 +425,7 @@ fun OfferDetailContent(offer: com.dsm.munaytripandroid.feature.offer.domain.mode
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = horario.dia.capitalize(),
+                                    text = horario.dia,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold
                                 )

@@ -17,4 +17,9 @@ class ProfileRepositoryImpl(
     override suspend fun updateProfileName(userId: String, userType: String, newName: String): Result<Unit> {
         return firestoreProfileDataSource.updateProfileName(userId, userType, newName)
     }
+
+    // Nueva función para actualizar la foto de perfil
+    override suspend fun updateProfilePhoto(userId: String, userType: String, photoUrl: String): Result<Unit> {
+        return firestoreProfileDataSource.updateProfilePhoto(userId, userType, photoUrl)
+    }
 }

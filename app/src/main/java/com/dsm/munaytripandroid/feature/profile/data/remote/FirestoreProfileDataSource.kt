@@ -67,4 +67,29 @@ class FirestoreProfileDataSource(
             Result.Error(e)
         }
     }
+
+    suspend fun updateProfilePhoto(userId: String, userType: String, photoUrl: String): Result<Unit> {
+        return try {
+            val collection = when (userType) {
+                "client" -> "clients"
+                "provider" -> "providers"
+                else -> throw IllegalArgumentException("Tipo de usuario no válido")
+            }
+
+            val fieldName = when (userType) {
+                "client" -> "avatar_url"
+                "provider" -> "logo_url"
+                else -> "avatar_url"
+            }
+
+            firestore.collection(collection)
+                .document(userId)
+                .update(fieldName, photoUrl)
+                .await()
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
 }

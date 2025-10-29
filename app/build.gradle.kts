@@ -89,7 +89,8 @@ dependencies {
     // implementation("com.firebaseui:firebase-ui-auth:8.0.2")
     // implementation("com.firebaseui:firebase-ui-firestore:8.0.2")
 
-
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
