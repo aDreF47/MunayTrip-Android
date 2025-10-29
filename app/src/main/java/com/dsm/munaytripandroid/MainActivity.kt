@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.dsm.munaytripandroid.core.navigation.AppNavigation
 import com.dsm.munaytripandroid.ui.theme.MunayTripAndroidTheme
+import com.google.android.libraries.places.api.Places
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -21,9 +22,13 @@ class MainActivity : ComponentActivity() {
     private lateinit var navController: NavHostController
     private lateinit var auth: FirebaseAuth
 
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         auth = Firebase.auth
+        Places.initialize(applicationContext, "AIzaSyBD731D3mQkUG-CejYzvg3KKnQwPm2ACPQ")
         enableEdgeToEdge()
         setContent {
             navController = rememberNavController()
@@ -33,6 +38,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavigation(navController = navController, auth)
+
                 }
             }
         }

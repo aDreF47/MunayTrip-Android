@@ -89,6 +89,12 @@ dependencies {
     // implementation("com.firebaseui:firebase-ui-auth:8.0.2")
     // implementation("com.firebaseui:firebase-ui-firestore:8.0.2")
 
+    // Google Play Services Location
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.maps.android:maps-compose:4.2.0")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
+    implementation(libs.places)
+
 
 
     implementation(libs.androidx.core.ktx)
@@ -100,8 +106,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.foundation)
-    implementation("com.google.maps.android:maps-compose:4.2.0")
-    implementation("com.google.android.gms:play-services-maps:19.2.0")
+    implementation(libs.places)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

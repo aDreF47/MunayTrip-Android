@@ -147,6 +147,7 @@ private suspend fun getUserTypeFromFirestore(userId: String): String {
 }
 
 
+
 /**
  * NOTAS DE IMPLEMENTACIÓN:
  *
