@@ -13,11 +13,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.dsm.munaytripandroid.feature.bookings.domain.model.Booking
 import com.google.firebase.auth.FirebaseAuth
 import com.github.tehras.charts.bar.BarChart
 import com.github.tehras.charts.bar.BarChartData
 import com.github.tehras.charts.bar.renderer.label.SimpleValueDrawer
+
 
 private val MunayPrimary = Color(0xFF1A7FA6)
 private val MunaySecondary = Color(0xFF4DB6E8)
@@ -39,6 +41,10 @@ fun ProviderHomeScreen(
     val currentUser = auth.currentUser
     val displayName = currentUser?.displayName ?: "Proveedor"
     var showLogoutDialog by remember { mutableStateOf(false) }
+
+    val statsOfertasActivas = 5
+    val statsVistasTotales = 120
+    val statsReservas = 15
 
     Scaffold(
         topBar = {
@@ -234,10 +240,18 @@ fun ProviderHomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        StatItem("Ofertas Activas", "0")
-                        StatItem("Vistas Totales", "0")
-                        StatItem("Reservas", "0")
+                        StatItem("Ofertas Activas", "$statsOfertasActivas")
+                        StatItem("Vistas Totales", "$statsVistasTotales")
+                        StatItem("Reservas", "$statsReservas")
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // --- GRÁFICO DE BARRAS AÑADIDO ---
+                    StatsBarChart(
+                        ofertas = statsOfertasActivas.toFloat(),
+                        vistas = statsVistasTotales.toFloat(),
+                        reservas = statsReservas.toFloat()
+                    )
                 }
             }
 
@@ -274,40 +288,9 @@ fun ProviderHomeScreen(
             )
         }
     }
-    /*@Composable
-    fun BarrasScreen(data: List<Booking>){
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            Text(text="Grafico de Barras")
-            Barras(data)
-        }
-    }
-    @Composable
-    fun Barras(data: List<NpersonasXTipoDocumento>){
-        val datos=data
-        var barras= ArrayList<BarChartData.Bar>()
-        datos.mapIndexed {index, datos->
-            barras.add(
-                BarChartData.Bar(
-                    label = datos.descripcion,
-                    value = datos.cantidad.toFloat(),
-                    color = Utils().colorAleatorio()
-                )
-            )
-        }
-        BarChart(
-            modifier= Modifier
-                .padding(30.dp,80.dp)
-                .height(300.dp),
-            labelDrawer= SimpleValueDrawer(
-                drawLocation = SimpleValueDrawer.DrawLocation.XAxis
-            ),
-            barChartData = BarChartData(
-                bars = barras
-            )
-        )
-    }*/
+
+
+
     // Logout Dialog
     if (showLogoutDialog) {
         AlertDialog(
@@ -368,6 +351,51 @@ fun StatItem(label: String, value: String) {
     }
 }
 
+
+@Composable
+fun StatsBarChart(
+    ofertas: Float,
+    vistas: Float,
+    reservas: Float
+) {
+    // Usamos un tercer color para la 3ra barra
+    val MunayAccent = Color(0xFFE88C4D) // Un color naranja para "Reservas"
+
+    // Creamos la lista de barras
+    val barras = arrayListOf(
+        BarChartData.Bar(
+            label = "Activas",
+            value = ofertas,
+            color = MunayPrimary
+        ),
+        BarChartData.Bar(
+            label = "Vistas",
+            value = vistas,
+            color = MunaySecondary
+        ),
+        BarChartData.Bar(
+            label = "Reservas",
+            value = reservas,
+            color = MunayAccent
+        )
+    )
+
+    // Renderizamos el gráfico
+    BarChart(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        barChartData = BarChartData(
+            bars = barras
+        ),
+        // Muestra la etiqueta (ej. "Activas") debajo de la barra
+        labelDrawer = SimpleValueDrawer(
+            drawLocation = SimpleValueDrawer.DrawLocation.XAxis,
+        ),
+        // --- LÍNEA DE ANIMACIÓN ELIMINADA ---
+        // animation = simpleChartAnimation()
+    )
+}
 
 /**
  * NOTAS FASE 1:
