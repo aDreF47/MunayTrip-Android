@@ -13,7 +13,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.dsm.munaytripandroid.feature.bookings.domain.model.Booking
 import com.google.firebase.auth.FirebaseAuth
+import com.github.tehras.charts.bar.BarChart
+import com.github.tehras.charts.bar.BarChartData
+import com.github.tehras.charts.bar.renderer.label.SimpleValueDrawer
 
 private val MunayPrimary = Color(0xFF1A7FA6)
 private val MunaySecondary = Color(0xFF4DB6E8)
@@ -270,7 +274,40 @@ fun ProviderHomeScreen(
             )
         }
     }
-
+    /*@Composable
+    fun BarrasScreen(data: List<Booking>){
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            Text(text="Grafico de Barras")
+            Barras(data)
+        }
+    }
+    @Composable
+    fun Barras(data: List<NpersonasXTipoDocumento>){
+        val datos=data
+        var barras= ArrayList<BarChartData.Bar>()
+        datos.mapIndexed {index, datos->
+            barras.add(
+                BarChartData.Bar(
+                    label = datos.descripcion,
+                    value = datos.cantidad.toFloat(),
+                    color = Utils().colorAleatorio()
+                )
+            )
+        }
+        BarChart(
+            modifier= Modifier
+                .padding(30.dp,80.dp)
+                .height(300.dp),
+            labelDrawer= SimpleValueDrawer(
+                drawLocation = SimpleValueDrawer.DrawLocation.XAxis
+            ),
+            barChartData = BarChartData(
+                bars = barras
+            )
+        )
+    }*/
     // Logout Dialog
     if (showLogoutDialog) {
         AlertDialog(

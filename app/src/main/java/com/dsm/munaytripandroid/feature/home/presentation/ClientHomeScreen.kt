@@ -26,11 +26,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.dsm.munaytripandroid.core.location.LocationManager
 import com.dsm.munaytripandroid.feature.client.data.repository.ClientRepository
 import com.dsm.munaytripandroid.feature.client.domain.model.ClientLocation
@@ -38,7 +41,10 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import androidx.lifecycle.viewmodel.compose.viewModel // Import necesario
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.storage
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -62,14 +68,15 @@ data class OfferPreview(
     val rating: Float,
     val distance: Double, // en km
     val category: String,
-    val imageUrl: String? = null,
+    val imageUrl: String?,
     val lat: Double,
-    val lng: Double
+    val lng: Double,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientHomeScreen(
+    homeViewModel: ClientHomeViewModel = viewModel(),
     auth: FirebaseAuth,
     onNavigateToProfile: () -> Unit,
     onNavigateToOffersList: () -> Unit,
@@ -100,32 +107,39 @@ fun ClientHomeScreen(
     var selectedCategory by remember { mutableStateOf("Todas") }
     var showFilters by remember { mutableStateOf(false) }
 
+    val allOffers by homeViewModel.promotions.collectAsState()
+    val isLoadingOffers by homeViewModel.isLoading.collectAsState()
     // MOCK DATA - Reemplazar con datos reales de Firebase
-    val mockOffers = remember {
-        listOf(
-            OfferPreview("1", "Tour Machu Picchu", "Inca Adventures", 150.0, 4.8f, 1.2, "Tours", null, -13.163141, -72.545128),
-            OfferPreview("2", "City Tour Lima", "Lima Explorer", 50.0, 4.5f, 0.8, "Tours", null, -12.046374, -77.042793),
-            OfferPreview("3", "Restaurante El Chalán", "Gastronomía Perú", 35.0, 4.9f, 2.3, "Gastronomía", null, -12.046374, -77.042793),
-            OfferPreview("4", "Hotel Costa Verde", "Hoteles Premium", 120.0, 4.7f, 3.1, "Hospedaje", null, -12.046374, -77.042793),
-            OfferPreview("5", "Parapente en Lima", "Aventura Extrema", 80.0, 4.6f, 4.5, "Aventura", null, -12.046374, -77.042793),
-        )
-    }
 
-    // Filtrar ofertas por distancia
-    val filteredOffers = remember(clientLocation, selectedDistance, selectedCategory) {
-        mockOffers.filter { offer ->
-            val distance = clientLocation?.let {
-                calculateDistance(it.lat, it.lng, offer.lat, offer.lng)
-            } ?: 0.0
+    val filteredOffers = remember(allOffers, clientLocation, selectedDistance, selectedCategory) {
 
-            val distanceMatch = distance <= selectedDistance
-            val categoryMatch = selectedCategory == "Todas" || offer.category == selectedCategory
+        // 2. SOLUCIÓN AL SMART CAST
+        // Copiamos el valor a una variable local estable (val)
+        val currentLocation = clientLocation
 
-            distanceMatch && categoryMatch
-        }.sortedBy { offer ->
-            clientLocation?.let {
-                calculateDistance(it.lat, it.lng, offer.lat, offer.lng)
-            } ?: Double.MAX_VALUE
+        // Usamos la variable local para el chequeo
+        if (currentLocation == null) {
+            emptyList() // No mostrar nada si no hay ubicación
+        } else {
+            // Usamos 'allOffers' como fuente
+            allOffers.map { offer ->
+                val distance = calculateDistance(
+                    // Usamos la variable local (currentLocation) que SÍ es no-nula
+                    lat1 = currentLocation.lat,
+                    lon1 = currentLocation.lng,
+                    lat2 = offer.lat,
+                    lon2 = offer.lng
+                )
+                offer.copy(distance = distance) // Actualizamos la distancia
+            }.filter { offer ->
+// ... (resto del filtro)
+// ... (resto de la lógica de filteredOffers)
+                val distanceMatch = offer.distance <= selectedDistance
+                val categoryMatch = selectedCategory == "Todas" || offer.category == selectedCategory
+                distanceMatch && categoryMatch
+            }.sortedBy { offer ->
+                offer.distance // Ordenamos por la distancia calculada
+            }
         }
     }
 
@@ -836,28 +850,34 @@ fun PromotionCard(offer: OfferPreview, onClick: () -> Unit) {
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
-        ) {
-            // Placeholder para imagen
+        ){
+
+            // 🔹 Imagen de fondo desde Firebase Storage
+            //    Usa offer.imageUrl, que ya fue preparado por el ViewModel
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(offer.imageUrl) // ¡Aquí se usa el link!
+                    .crossfade(true)
+                    // .error(R.drawable.ic_placeholder) // Línea eliminada
+                    // .placeholder(R.drawable.ic_placeholder) // Línea eliminada
+                    .build(),
+                contentDescription = offer.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // 🔹 Capa semitransparente (overlay)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(MunaySecondary, MunayPrimary)
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
+                            startY = 100f
                         )
                     )
             )
 
-            // Overlay con info
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
-                        )
-                    )
-            )
 
             // Badge de descuento (arriba a la derecha)
             Card(
@@ -994,16 +1014,23 @@ fun OfferCard(
                     .clip(RoundedCornerShape(12.dp))
                     .background(
                         brush = Brush.linearGradient(
-                            colors = listOf(MunaySecondary.copy(alpha = 0.3f), MunayPrimary.copy(alpha = 0.3f))
+                            colors = listOf(
+                                MunaySecondary.copy(alpha = 0.3f),
+                                MunayPrimary.copy(alpha = 0.3f)
+                            )
                         )
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.Image,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MunayPrimary.copy(alpha = 0.5f)
+                // 🔹 Imagen de fondo desde Firebase Storage
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(offer.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = offer.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
 
