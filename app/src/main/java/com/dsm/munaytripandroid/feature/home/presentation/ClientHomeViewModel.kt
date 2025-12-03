@@ -56,9 +56,9 @@ class ClientHomeViewModel : ViewModel() {
         return OfferPreview(
             id = offer.offerId,
             title = offer.titulo,
-            provider = offer.providerId, // Quizás necesites buscar el nombre del proveedor
+            provider = offer.providerId,
             price = offer.precio,
-            rating = 4.5f, // Deberías agregar 'rating' a tu modelo 'Offer' si existe en Firestore
+            rating = 4.5f, // Agregar 'rating' a tu modelo 'Offer' si existe en Firestore
             distance = 0.0, // La distancia se calculará en la UI (como ya lo haces)
             category = offer.categoria.name.replaceFirstChar { it.titlecase() },
             descuento = offer.descuento,

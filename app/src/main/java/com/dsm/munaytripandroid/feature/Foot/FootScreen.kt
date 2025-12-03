@@ -196,7 +196,7 @@ fun FootScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(text = "Huella de Carbono", fontWeight = FontWeight.Bold) },
+                title = { Text(text = "Canjea tus pts y gana", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -235,9 +235,10 @@ fun FootScreen(
 
             // 2. Ruleta Composable
             SpinningWheel(
+                rotationDegrees = rotation,
                 modifier = Modifier
                     .size(320.dp) // Un poco más grande
-                    .rotate(rotation)
+                    //.rotate(rotation)
             )
 
             Spacer(modifier = Modifier.height(64.dp))
@@ -343,24 +344,29 @@ fun RoulettePointsCard(points: Int) {
 
 /**
  * Dibuja la ruleta con sus segmentos y texto.
- */
-@Composable
+ */@Composable
 fun SpinningWheel(
+    rotationDegrees: Float, // 1. Recibimos la rotación aquí
     modifier: Modifier = Modifier,
-    prizes: List<Prize> = prizesList // Usamos la lista predeterminada
+    prizes: List<Prize> = prizesList
 ) {
     val textMeasurer = rememberTextMeasurer()
     val textSize = 14.sp
 
     Box(modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
+        // --- CAPA 1: LA RULETA (Esta SÍ rota) ---
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .rotate(rotationDegrees) // 2. Aplicamos la rotación SOLO a este Canvas
+        ) {
             val canvasSize = size.minDimension
             val radius = canvasSize / 2f
             val center = Offset(size.width / 2f, size.height / 2f)
             val segmentRadius = radius * 0.75f
 
             prizes.forEach { prize ->
-                // Dibujar el segmento (Arco)
+                // Dibujar el segmento
                 drawArc(
                     color = prize.color,
                     startAngle = prize.startAngle,
@@ -372,14 +378,12 @@ fun SpinningWheel(
 
                 val textAngle = prize.startAngle + prize.sweepAngle / 2f
 
-                // Rotar el sistema de coordenadas para dibujar el texto
+                // Rotar el texto para que coincida con el segmento
                 rotate(degrees = textAngle + 90f, pivot = center) {
                     val textLayoutResult = textMeasurer.measure(
                         text = prize.name,
                         style = TextStyle(color = Color.White, fontSize = textSize, fontWeight = FontWeight.SemiBold)
                     )
-
-                    // Posicionar el texto a lo largo del radio
                     drawText(
                         textLayoutResult = textLayoutResult,
                         topLeft = Offset(
@@ -390,46 +394,41 @@ fun SpinningWheel(
                 }
             }
 
-            // Dibujar el círculo central (estético)
-            drawCircle(
-                color = Color.White,
-                radius = radius * 0.1f,
-                center = center
-            )
+            // Círculo central estético (que gira con la ruleta)
+            drawCircle(color = Color.White, radius = radius * 0.1f, center = center)
         }
 
-        // 2. EL INDICADOR (FLECHA) ESTÁTICO
-        // Este Canvas NO rota, por lo que la flecha siempre apunta hacia abajo desde arriba
+        // --- CAPA 2: EL INDICADOR / FLECHA (Esta NO rota) ---
+        // Al no ponerle .rotate(), se queda fija en la pantalla
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasSize = size.minDimension
             val radius = canvasSize / 2f
             val center = Offset(size.width / 2f, size.height / 2f)
 
-            // Dibujamos una flecha (Triángulo invertido) en la parte SUPERIOR (12 en punto)
-            // que apunta hacia el centro.
+            // Dibujamos la flecha en la parte SUPERIOR (12 en punto)
             val path = Path().apply {
-                // Punta del triángulo (hacia abajo, entrando un poco en la ruleta)
-                moveTo(center.x, center.y - radius + 40f)
-                // Esquina superior izquierda
-                lineTo(center.x - 25f, center.y - radius - 20f)
-                // Esquina superior derecha
-                lineTo(center.x + 25f, center.y - radius - 20f)
+                moveTo(center.x, center.y - radius + 50f) // Punta bajando un poco más
+                lineTo(center.x - 30f, center.y - radius - 20f) // Izquierda arriba
+                lineTo(center.x + 30f, center.y - radius - 20f) // Derecha arriba
                 close()
             }
 
-            // Relleno negro
-            drawPath(color = Color.Black, path = path)
+            // Sombra de la flecha
+            drawPath(color = Color.Black.copy(alpha = 0.3f), path = path)
 
-            // Borde blanco para resaltar
+            // Flecha Principal
+            drawPath(color = MunayPrimary, path = path)
+
+            // Borde blanco de la flecha
             drawPath(
                 color = Color.White,
                 path = path,
-                style = Stroke(width = 3.dp.toPx())
+                style = Stroke(width = 4.dp.toPx())
             )
 
-            // Círculo central decorativo (Estático encima de todo)
-            drawCircle(color = Color.White, radius = 18.dp.toPx(), center = center)
-            drawCircle(color = MunayPrimary, radius = 12.dp.toPx(), center = center)
+            // Botón central decorativo (Fijo encima de todo)
+            drawCircle(color = Color.White, radius = 20.dp.toPx(), center = center)
+            drawCircle(color = MunayPrimary, radius = 14.dp.toPx(), center = center)
         }
     }
 }

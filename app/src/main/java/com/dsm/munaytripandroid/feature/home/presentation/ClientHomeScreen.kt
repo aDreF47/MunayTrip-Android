@@ -83,7 +83,7 @@ fun ClientHomeScreen(
     onNavigateToOffersList: () -> Unit,
     onNavigateToOfferDetail: (String) -> Unit,
     onNavigateToFoots: () -> Unit,
-    onNavigateToFavorites: () -> Unit,
+    onNavigateToBookings: () -> Unit,
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
@@ -283,8 +283,8 @@ fun ClientHomeScreen(
                 NavigationBarItem(
                     selected = false,
                     onClick = onNavigateToFoots,
-                    icon = { Icon(Icons.Default.Home, "Huella") },
-                    label = { Text("Huella") },
+                    icon = { Icon(Icons.Default.CardGiftcard, "Ruleta con premios") },
+                    label = { Text("Premios") },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MunayPrimary,
                         selectedTextColor = MunayPrimary,
@@ -293,9 +293,9 @@ fun ClientHomeScreen(
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = onNavigateToFavorites,
-                    icon = { Icon(Icons.Default.BookmarkBorder, "Guardados") },
-                    label = { Text("Guardados") }
+                    onClick = onNavigateToBookings,
+                    icon = { Icon(Icons.Default.BookmarkBorder, "Mis Reservas") },
+                    label = { Text("Reservas") }
                 )
                 NavigationBarItem(
                     selected = false,

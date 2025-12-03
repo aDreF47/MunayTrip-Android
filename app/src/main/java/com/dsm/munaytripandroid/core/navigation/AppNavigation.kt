@@ -156,8 +156,8 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                 onNavigateToFoots = {
                     navController.navigate(Foot)
                 },
-                onNavigateToFavorites = {
-                    navController.navigate(Favorite)
+                onNavigateToBookings = {
+                    navController.navigate(Booking)
                 },
                 onLogout = {
                     auth.signOut()
