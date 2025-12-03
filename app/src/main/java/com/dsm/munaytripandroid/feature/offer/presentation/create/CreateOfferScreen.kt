@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dsm.munaytripandroid.feature.offer.domain.model.OfferCategory
+import com.dsm.munaytripandroid.feature.offer.domain.model.OfferHorario
 import com.dsm.munaytripandroid.feature.offer.domain.model.OfferType
 
 private val MunayPrimary = Color(0xFF1A7FA6)
@@ -34,6 +36,9 @@ fun CreateOfferScreen(
     val createSuccess by viewModel.createSuccess.collectAsState()
 
     var showEtiquetaDialog by remember { mutableStateOf(false) }
+    var showHorarioDialog by remember { mutableStateOf(false) }
+    var showIncluyeDialog by remember { mutableStateOf(false) }
+    var showRecomendacionDialog by remember { mutableStateOf(false) }
 
     // Observar éxito
     LaunchedEffect(createSuccess) {
@@ -172,7 +177,7 @@ fun CreateOfferScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Sección: Precio y Capacidad
-            SectionHeader("💰 Precio y Capacidad")
+            SectionHeader("💰 Precio, Descuento y Capacidad")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -203,6 +208,19 @@ fun CreateOfferScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            OutlinedTextField(
+                value = if (uiState.descuento == 0) "" else uiState.descuento.toString(),
+                onValueChange = viewModel::onDescuentoChange,
+                label = { Text("Descuento (%)") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                enabled = !uiState.isLoading && !uiState.esGratis,
+                suffix = { Text("%") },
+                supportingText = { Text("Opcional: Aplica un porcentaje de descuento") }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -210,7 +228,7 @@ fun CreateOfferScreen(
                 OutlinedTextField(
                     value = if (uiState.capacidadMaxima == 0) "" else uiState.capacidadMaxima.toString(),
                     onValueChange = viewModel::onCapacidadMaximaChange,
-                    label = { Text("Capacidad *") },
+                    label = { Text("Capacidad máxima *") },
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     enabled = !uiState.isLoading,
@@ -218,13 +236,92 @@ fun CreateOfferScreen(
                 )
 
                 OutlinedTextField(
-                    value = uiState.duracion,
-                    onValueChange = viewModel::onDuracionChange,
-                    label = { Text("Duración") },
+                    value = if (uiState.cuposDisponibles == 0) "" else uiState.cuposDisponibles.toString(),
+                    onValueChange = viewModel::onCuposDisponiblesChange,
+                    label = { Text("Cupos disponibles *") },
                     modifier = Modifier.weight(1f),
-                    enabled = !uiState.isLoading,
-                    placeholder = { Text("Ej: 2 horas") }
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    enabled = !uiState.isLoading
                 )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = uiState.duracion,
+                onValueChange = viewModel::onDuracionChange,
+                label = { Text("Duración") },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading,
+                placeholder = { Text("Ej: 2 horas, 3 días") }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Sección: Horarios
+            SectionHeader("🕐 Horarios (Opcional)")
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF5F9FB)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    if (uiState.horarios.isEmpty()) {
+                        Text(
+                            text = "Sin horarios definidos. Agrega horarios de atención si aplica.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    } else {
+                        uiState.horarios.forEach { horario ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = horario.dia.capitalize(),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "${horario.horaInicio} - ${horario.horaFin}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray
+                                    )
+                                }
+                                IconButton(onClick = { viewModel.removeHorario(horario) }) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Eliminar",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                            if (horario != uiState.horarios.last()) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = { showHorarioDialog = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Agregar horario")
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -252,6 +349,151 @@ fun CreateOfferScreen(
                 enabled = !uiState.isLoading,
                 placeholder = { Text("Ej: Av. El Sol 123, Cusco") }
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = uiState.latitudInput,
+                    onValueChange = viewModel::onUbicacionLatitud,
+                    label = { Text("Latitud *") },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    enabled = !uiState.isLoading,
+                    placeholder = { Text("-10.0980896") },
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = uiState.longitudInput,
+                    onValueChange = viewModel::onUbicacionLongitud,
+                    label = { Text("Longitud *") },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    enabled = !uiState.isLoading,
+                    placeholder = { Text("-75.0980896") },
+                    singleLine = true
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Sección: Incluye
+            SectionHeader("✅ ¿Qué incluye? (Opcional)")
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF5F9FB)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    if (uiState.incluye.isEmpty()) {
+                        Text(
+                            text = "Lista vacía. Agrega lo que incluye tu oferta.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    } else {
+                        uiState.incluye.forEach { item ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "• $item",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                IconButton(onClick = { viewModel.removeIncluye(item) }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Eliminar",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = { showIncluyeDialog = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Agregar ítem")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Sección: Recomendaciones
+            SectionHeader("💡 Recomendaciones (Opcional)")
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF5F9FB)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    if (uiState.recomendaciones.isEmpty()) {
+                        Text(
+                            text = "Sin recomendaciones. Agrega consejos para los usuarios.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    } else {
+                        uiState.recomendaciones.forEach { recomendacion ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "• $recomendacion",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                IconButton(onClick = { viewModel.removeRecomendacion(recomendacion) }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Eliminar",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = { showRecomendacionDialog = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Agregar recomendación")
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -306,6 +548,23 @@ fun CreateOfferScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Sección: Instrucciones de Pago
+            SectionHeader("💳 Instrucciones de Pago")
+
+            OutlinedTextField(
+                value = uiState.instruccionesPago,
+                onValueChange = viewModel::onInstruccionesPagoChange,
+                label = { Text("Instrucciones de pago") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 6,
+                enabled = !uiState.isLoading,
+                placeholder = { Text("Ej: El pago se realiza en efectivo al llegar al lugar. También aceptamos Yape y Plin.") },
+                supportingText = { Text("Indica cómo y cuándo deben realizar el pago") }
+            )
 
             // Mensaje de error general
             if (uiState.errorMessage != null) {
@@ -404,6 +663,142 @@ fun CreateOfferScreen(
             }
         )
     }
+
+    // Diálogo agregar horario
+    if (showHorarioDialog) {
+        var dia by remember { mutableStateOf("") }
+        var horaInicio by remember { mutableStateOf("") }
+        var horaFin by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showHorarioDialog = false },
+            title = { Text("Agregar horario") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = dia,
+                        onValueChange = { dia = it },
+                        label = { Text("Día") },
+                        placeholder = { Text("Ej: Lunes, Sábado, Todos") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = horaInicio,
+                            onValueChange = { horaInicio = it },
+                            label = { Text("Hora inicio") },
+                            placeholder = { Text("09:00") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = horaFin,
+                            onValueChange = { horaFin = it },
+                            label = { Text("Hora fin") },
+                            placeholder = { Text("18:00") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (dia.isNotBlank() && horaInicio.isNotBlank() && horaFin.isNotBlank()) {
+                            viewModel.addHorario(dia, horaInicio, horaFin)
+                            showHorarioDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MunayPrimary)
+                ) {
+                    Text("Agregar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showHorarioDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    // Diálogo agregar incluye
+    if (showIncluyeDialog) {
+        var newItem by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showIncluyeDialog = false },
+            title = { Text("¿Qué incluye?") },
+            text = {
+                OutlinedTextField(
+                    value = newItem,
+                    onValueChange = { newItem = it },
+                    label = { Text("Ítem") },
+                    placeholder = { Text("Ej: Guía turístico, Transporte") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newItem.isNotBlank()) {
+                            viewModel.addIncluye(newItem)
+                            showIncluyeDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MunayPrimary)
+                ) {
+                    Text("Agregar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showIncluyeDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    // Diálogo agregar recomendación
+    if (showRecomendacionDialog) {
+        var newRecomendacion by remember { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showRecomendacionDialog = false },
+            title = { Text("Agregar recomendación") },
+            text = {
+                OutlinedTextField(
+                    value = newRecomendacion,
+                    onValueChange = { newRecomendacion = it },
+                    label = { Text("Recomendación") },
+                    placeholder = { Text("Ej: Llevar protector solar") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newRecomendacion.isNotBlank()) {
+                            viewModel.addRecomendacion(newRecomendacion)
+                            showRecomendacionDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MunayPrimary)
+                ) {
+                    Text("Agregar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRecomendacionDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -416,19 +811,3 @@ fun SectionHeader(text: String) {
         modifier = Modifier.padding(bottom = 12.dp)
     )
 }
-
-
-/**
- * MEJORAS EN FASE 2:
- * ✅ UI mejorada con secciones claras
- * ✅ Headers de sección con emojis
- * ✅ Validaciones visuales en campos
- * ✅ Contador de caracteres
- * ✅ Mensajes de error mejorados
- * ✅ Card de error destacado
- * ✅ Placeholder texts en campos
- * ✅ Grid de categorías más limpio
- * ✅ Etiquetas en card con mejor UX
- * ✅ Loading state en botón
- * ✅ Íconos en botones
- */

@@ -24,6 +24,7 @@ places = "5.0.0"
 material3 = "1.4.0"
 ui = "1.9.4"
 uiVersion = "1.9.5"
+roomKtx = "2.8.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -60,6 +61,7 @@ androidx-foundation = { group = "androidx.compose.foundation", name = "foundatio
 places = { group = "com.google.android.libraries.places", name = "places", version.ref = "places" }
 tehras-charts = { module = "com.github.tehras:charts", version.ref = "tehras-charts" }
 ui = { group = "androidx.compose.ui", name = "ui", version.ref = "uiVersion" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

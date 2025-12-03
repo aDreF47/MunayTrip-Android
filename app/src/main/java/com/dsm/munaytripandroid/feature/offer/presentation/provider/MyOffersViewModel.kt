@@ -1,6 +1,5 @@
 package com.dsm.munaytripandroid.feature.offer.presentation.provider
 
-import android.app.Activity
 import android.content.Intent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,8 +13,8 @@ import com.dsm.munaytripandroid.feature.offer.domain.model.Offer
 import com.dsm.munaytripandroid.feature.offer.domain.model.PointsToken
 import com.dsm.munaytripandroid.feature.offer.domain.repository.OfferRepository
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,10 +43,10 @@ class MyOffersViewModel : ViewModel() {
                 val tokenData = PointsToken(
                     id = tokenId,
                     providerId = providerId,
-                    offerId = offer.offerId, // CAMBIO: offer.id -> offer.offerId
+                    offerId = offer.offerId,
                     pointsAmount = offer.pointsReward,
                     status = "PENDING",
-                    createdAt = FieldValue.serverTimestamp()
+                    createdAt = Timestamp.now()
                 )
 
                 // Guardamos el token en Firestore
@@ -57,7 +56,6 @@ class MyOffersViewModel : ViewModel() {
                 val deepLink = "munaytrip://redeem?code=$tokenId"
 
                 // Intent para compartir (WhatsApp, Telegram, etc.)
-                // CAMBIO: offer.title -> offer.titulo
                 val shareIntent = Intent().apply {
                     action = Intent.ACTION_SEND
                     putExtra(Intent.EXTRA_TEXT, "¡Gracias por elegir ${offer.titulo}! \n\nGana ${offer.pointsReward} puntos canjeando este código: $deepLink")
@@ -73,6 +71,7 @@ class MyOffersViewModel : ViewModel() {
             }
         }
     }
+
     private val offerRepository: OfferRepository = OfferRepositoryImpl(
         OfferFirestoreDataSource()
     )
@@ -116,7 +115,6 @@ class MyOffersViewModel : ViewModel() {
 
             when (val result = offerRepository.deleteOffer(offerId)) {
                 is Result.Success -> {
-                    // La lista se actualizará automáticamente por el Flow
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         successMessage = "Oferta eliminada correctamente"
