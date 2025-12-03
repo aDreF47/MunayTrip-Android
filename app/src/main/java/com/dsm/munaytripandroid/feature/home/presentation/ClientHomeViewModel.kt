@@ -61,6 +61,7 @@ class ClientHomeViewModel : ViewModel() {
             rating = 4.5f, // Deberías agregar 'rating' a tu modelo 'Offer' si existe en Firestore
             distance = 0.0, // La distancia se calculará en la UI (como ya lo haces)
             category = offer.categoria.name.replaceFirstChar { it.titlecase() },
+            descuento = offer.descuento,
 
             // ¡¡ESTA ES LA LÍNEA CLAVE!!
             // Obtiene la primera URL de la lista 'thumbnailUrls' de Firestore

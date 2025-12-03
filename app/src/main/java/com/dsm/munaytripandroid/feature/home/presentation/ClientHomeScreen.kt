@@ -71,6 +71,7 @@ data class OfferPreview(
     val imageUrl: String?,
     val lat: Double,
     val lng: Double,
+    val descuento: Int
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -431,7 +432,6 @@ fun ClientHomeScreen(
             item {
                 SectionHeader(
                     title = "🔥 Promociones Destacadas",
-                    subtitle = "Ofertas especiales cerca de ti",
                     onSeeAll = onNavigateToOffersList
                 )
             }
@@ -841,10 +841,18 @@ fun PromotionsCarousel(
     offers: List<OfferPreview>,
     onOfferClick: (String) -> Unit
 ) {
+    // Filtrar solo ofertas con descuento mayor a 0
+    val offersWithDiscount = offers.filter { offer -> offer.descuento > 0 }
+
+    if (offersWithDiscount.isEmpty()) {
+        // Opcional: Mostrar un mensaje o no mostrar nada
+        Text("No hay Actividades con descuento cerca de ti")
+        return
+    }
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(offers) { offer ->
+        items(offersWithDiscount) { offer ->
             PromotionCard(offer = offer, onClick = { onOfferClick(offer.id) })
         }
     }
@@ -870,8 +878,6 @@ fun PromotionCard(offer: OfferPreview, onClick: () -> Unit) {
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(offer.imageUrl) // ¡Aquí se usa el link!
                     .crossfade(true)
-                    // .error(R.drawable.ic_placeholder) // Línea eliminada
-                    // .placeholder(R.drawable.ic_placeholder) // Línea eliminada
                     .build(),
                 contentDescription = offer.title,
                 contentScale = ContentScale.Crop,
@@ -890,7 +896,6 @@ fun PromotionCard(offer: OfferPreview, onClick: () -> Unit) {
                     )
             )
 
-
             // Badge de descuento (arriba a la derecha)
             Card(
                 modifier = Modifier
@@ -900,7 +905,7 @@ fun PromotionCard(offer: OfferPreview, onClick: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = MunayAccent)
             ) {
                 Text(
-                    text = "-20%",
+                    text = "-${offer.descuento}%",
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,

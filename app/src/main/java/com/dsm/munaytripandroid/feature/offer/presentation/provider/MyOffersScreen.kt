@@ -403,7 +403,7 @@ fun ProviderOfferCard(
                 )
                 StatItem(
                     icon = "📅",
-                    value = "0",
+                    value = "${offer.capacidadMaxima-offer.cuposDisponibles}",
                     label = "Reservas"
                 )
                 StatItem(
