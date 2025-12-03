@@ -180,9 +180,17 @@ fun FootScreen(
     // Determinar el premio al finalizar la animación
     LaunchedEffect(rotation) {
         if (isSpinning && rotation == targetRotation) {
-            val finalAngle = targetRotation % 360f
-            val normalizedAngle = (finalAngle + 90f) % 360f
-            val prize = determineWinningPrize(normalizedAngle)
+            // 1. Normalizamos la rotación final a 0-360
+            val currentRotationNormalized = targetRotation % 360f
+
+            // 2. FORMULA MAESTRA:
+            // La flecha está fija en 270 grados (arriba).
+            // Restamos la rotación de la ruleta para ver qué ángulo del disco está "debajo" de la flecha.
+            // Sumamos 360 antes del módulo final para evitar números negativos.
+            val angleOfArrowOnWheel = (270f - currentRotationNormalized + 360f) % 360f
+
+            // 3. Buscamos el premio con ese ángulo corregido
+            val prize = determineWinningPrize(angleOfArrowOnWheel)
             winningPrize = prize
             isSpinning = false
         }
@@ -471,16 +479,16 @@ fun PrizeDialog(prizeName: String, onDismiss: () -> Unit) {
 /**
  * Lógica para determinar qué premio se ganó basándose en el ángulo final.
  */
-private fun determineWinningPrize(normalizedAngle: Float): Prize {
-    // El ángulo está normalizado y apunta hacia el indicador de la ruleta.
-
-    val angle = (normalizedAngle.roundToInt() % 360).toFloat()
+private fun determineWinningPrize(angleOnWheel: Float): Prize {
+    // El ángulo ya viene calculado respecto al inicio de cada segmento (0 grados = Este)
 
     return prizesList.firstOrNull { prize ->
         val start = prize.startAngle
         val end = start + prize.sweepAngle
-        angle >= start && angle < end
-    } ?: prizesList.first() // Fallback
+
+        // Verificamos si el ángulo de la flecha cae dentro de este segmento
+        angleOnWheel >= start && angleOnWheel < end
+    } ?: prizesList.first() // Fallback por seguridad
 }
 
 @Preview(showBackground = true)
