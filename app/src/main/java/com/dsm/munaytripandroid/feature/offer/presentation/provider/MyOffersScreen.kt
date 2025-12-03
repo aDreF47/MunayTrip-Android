@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -160,8 +161,72 @@ fun MyOffersScreen(
                     items(uiState.filteredOffers) { offer ->
                         ProviderOfferCard(
                             offer = offer,
+                            viewModel = viewModel,
                             onViewClick = { onNavigateToOfferDetail(offer.offerId) },
                             onEditClick = { /* TODO: Implementar edición */ },
+                            onPauseClick = { viewModel.pauseOffer(offer.offerId) },
+                            onActivateClick = { viewModel.activateOffer(offer.offerId) },
+                            onDeleteClick = { viewModel.deleteOffer(offer.offerId) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Mis Ofertas") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF6200EE), // Usé un color default por si MunayPrimary no está
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onNavigateToCreateOffer,
+                containerColor = Color(0xFF6200EE),
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Crear oferta")
+            }
+        }
+    ) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+
+            // ... (Filtros y LazyRow se mantienen igual) ...
+
+            HorizontalDivider()
+
+            // Lista de ofertas
+            if (uiState.isLoading && uiState.offers.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState.filteredOffers.isEmpty()) {
+                // ... (Estado vacío se mantiene igual) ...
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No tienes ofertas")
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(uiState.filteredOffers) { offer ->
+                        ProviderOfferCard(
+                            offer = offer,
+                            viewModel = viewModel, // <--- 1. PASAMOS EL VIEWMODEL AQUÍ
+                            onViewClick = { onNavigateToOfferDetail(offer.offerId) },
+                            onEditClick = { /* TODO */ },
                             onPauseClick = { viewModel.pauseOffer(offer.offerId) },
                             onActivateClick = { viewModel.activateOffer(offer.offerId) },
                             onDeleteClick = { viewModel.deleteOffer(offer.offerId) }
@@ -177,6 +242,7 @@ fun MyOffersScreen(
 @Composable
 fun ProviderOfferCard(
     offer: Offer,
+    viewModel: MyOffersViewModel,
     onViewClick: () -> Unit,
     onEditClick: () -> Unit,
     onPauseClick: () -> Unit,
@@ -381,6 +447,15 @@ fun ProviderOfferCard(
                     color = Color.Gray
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
+
+            // Este es el componente que definimos en SistemaPuntos.kt
+            OfferItemButton(
+                offer = offer,
+                viewModel = viewModel
+            )
         }
     }
 
@@ -424,6 +499,24 @@ fun ProviderOfferCard(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun OfferItemButton(
+    offer: Offer,
+    viewModel: MyOffersViewModel
+) {
+    val context = LocalContext.current
+
+    Button(
+        onClick = { viewModel.generateAndShareLink(offer, context) },
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+    ) {
+        Icon(imageVector = Icons.Default.Share, contentDescription = null, tint = Color.White)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Regalar ${offer.pointsReward} Puntos")
     }
 }
 

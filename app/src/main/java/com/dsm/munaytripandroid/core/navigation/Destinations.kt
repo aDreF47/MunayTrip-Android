@@ -60,6 +60,9 @@ data class EditOffer(
 @Serializable
 object Profile
 
+@Serializable
+object Foot
+
 // ==================== BOOKINGS ====================
 @Serializable
 object Booking

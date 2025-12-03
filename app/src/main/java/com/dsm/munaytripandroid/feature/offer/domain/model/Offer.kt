@@ -32,16 +32,25 @@ data class Offer(
     val instruccionesPago: String = "",
     val createdAt: Timestamp? = null,
     val updatedAt: Timestamp? = null,
-    val estado: String = "activo"  // activo, pausado, finalizado
+    val estado: String = "activo",  // activo, pausado, finalizado
+    val pointsReward: Int = 50
 ){
     constructor() : this(
         "", "", "", "", "", OfferCategory.CULTURAL, emptyList(),
         OfferLocation(), "", emptyList(), 0.0, false, 0, 0,
         emptyList(), emptyList(), 0, emptyList(), emptyList(),
-        OfferType.EVENT, false, "", null, null, "activo"
+        OfferType.EVENT, false, "", null, null, "activo",50
     )
 }
 
+data class PointsToken(
+    val id: String = "",
+    val providerId: String = "",
+    val offerId: String = "",
+    val pointsAmount: Int = 0,
+    val status: String = "PENDING", // Valores: "PENDING", "REDEEMED"
+    val createdAt: Any? = null
+)
 data class OfferLocation(
     val lat: Double = 0.0,
     val lng: Double = 0.0,

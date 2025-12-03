@@ -350,6 +350,7 @@ fun ProfileContent(
     onNavigateToBookings: () -> Unit,
     onNavigateToFavorites: () -> Unit
 ) {
+    val viewModel: ProfileViewModel = viewModel()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -519,80 +520,88 @@ fun ProfileContent(
                     }
                 }
             }
+            if (viewModel.isClient) {
+                ClientPointsCard(
+                    points = viewModel.userPoints
+                )
         }
 
-        // Opciones del perfil
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Mis Reservas
-            Card(
-                onClick = onNavigateToBookings,
+        }
+        if (viewModel.isClient) {
+            // Opciones del perfil
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MunayPrimary),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Mis Reservas
+                Card(
+                    onClick = onNavigateToBookings,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MunayPrimary),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.2f),
-                            modifier = Modifier.size(48.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
+                            Surface(
+                                shape = CircleShape,
+                                color = Color.White.copy(alpha = 0.2f),
+                                modifier = Modifier.size(48.dp)
                             ) {
-                                Icon(
-                                    Icons.Default.Bookmark,
-                                    contentDescription = "Mis Reservas",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Icon(
+                                        Icons.Default.Bookmark,
+                                        contentDescription = "Mis Reservas",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    text = "Mis Reservas",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "Ver y gestionar tus reservas activas",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White.copy(alpha = 0.9f)
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(
-                                text = "Mis Reservas",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Ver y gestionar tus reservas activas",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White.copy(alpha = 0.9f)
-                            )
-                        }
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Ver reservas",
+                            tint = Color.White
+                        )
                     }
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "Ver reservas",
-                        tint = Color.White
-                    )
                 }
+
+                // Mis Favoritos
+                ProfileOptionCard(
+                    title = "Mis Favoritos",
+                    subtitle = "Ofertas que te han gustado",
+                    icon = Icons.Default.Favorite,
+                    iconColor = Color.Red,
+                    onClick = onNavigateToFavorites
+                )
+
             }
-
-            // Mis Favoritos
-            ProfileOptionCard(
-                title = "Mis Favoritos",
-                subtitle = "Ofertas que te han gustado",
-                icon = Icons.Default.Favorite,
-                iconColor = Color.Red,
-                onClick = onNavigateToFavorites
-            )
-
         }
+
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -627,6 +636,70 @@ fun ProfileContent(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(16.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ClientPointsCard(
+    points: Int,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFFFF8E1) // Un color dorado/crema suave
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = "Mis Puntos Viajeros",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color(0xFFF57F17), // Dorado oscuro
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "¡Úsalos en tu próxima aventura!",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+
+            // Badge de puntos
+            Surface(
+                shape = CircleShape,
+                color = Color(0xFFFFB300), // Dorado brillante
+                modifier = Modifier.size(60.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = points.toString(),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
+                        )
+                    }
+                }
             }
         }
     }

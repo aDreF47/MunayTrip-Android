@@ -81,6 +81,7 @@ fun ClientHomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToOffersList: () -> Unit,
     onNavigateToOfferDetail: (String) -> Unit,
+    onNavigateToFoots: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -277,6 +278,17 @@ fun ClientHomeScreen(
                     onClick = onNavigateToOffersList,
                     icon = { Icon(Icons.Default.Search, "Explorar") },
                     label = { Text("Explorar") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = onNavigateToFoots,
+                    icon = { Icon(Icons.Default.Home, "Huella") },
+                    label = { Text("Huella") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MunayPrimary,
+                        selectedTextColor = MunayPrimary,
+                        indicatorColor = MunayPrimary.copy(alpha = 0.1f)
+                    )
                 )
                 NavigationBarItem(
                     selected = false,

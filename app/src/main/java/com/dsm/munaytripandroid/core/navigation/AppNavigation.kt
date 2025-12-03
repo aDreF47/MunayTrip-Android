@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.dsm.munaytripandroid.feature.Foot.FootScreen
 import com.dsm.munaytripandroid.feature.onboarding.presentation.splash.SplashScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.login.LoginScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.register.RegisterScreen
@@ -152,6 +153,9 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                 onNavigateToOfferDetail = { offerId ->
                     navController.navigate(OfferDetail(offerId))
                 },
+                onNavigateToFoots = {
+                    navController.navigate(Foot)
+                },
                 onNavigateToFavorites = {
                     navController.navigate(Favorite)
                 },
@@ -275,7 +279,17 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                 }
             )
         }
+        composable<Foot>{
+            FootScreen(
+                onNavigateBack={
+                    navController.popBackStack()
+                } ,
+                onNavigateToFoots ={
+                    navController.navigate(Foot)
+                }
+            )
 
+        }
         // ========== BOOKINGS SCREEN ==========
         composable<Booking> {
             BookingsScreen(
