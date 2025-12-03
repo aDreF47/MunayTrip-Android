@@ -29,6 +29,12 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.draw.clip
+import coil.compose.AsyncImage
+import com.dsm.munaytripandroid.feature.offer.domain.model.Review
 
 private val MunayPrimary = Color(0xFF1A7FA6)
 private val MunaySecondary = Color(0xFF4DB6E8)
@@ -43,8 +49,10 @@ fun OfferDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Cargar reviews al iniciar
     LaunchedEffect(offerId) {
         viewModel.loadOffer(offerId)
+        viewModel.loadReviews(offerId) // <--- NUEVO
     }
 
     Scaffold(
@@ -189,11 +197,7 @@ fun OfferDetailScreen(
             }
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when {
                 uiState.isLoading -> {
                     CircularProgressIndicator(
@@ -224,16 +228,36 @@ fun OfferDetailScreen(
                         }
                     }
                 }
-                uiState.offer != null -> {
-                    OfferDetailContent(offer = uiState.offer!!)
-                }
+            }
+            if (uiState.offer != null) {
+                OfferDetailContent(
+                    offer = uiState.offer!!,
+                    reviews = uiState.reviews, // <--- Pasar reviews
+                    onAddReviewClick = { viewModel.toggleReviewDialog(true) } // <--- Abrir diálogo
+                )
+            }
+
+            // --- MOSTRAR DIÁLOGO SI ESTÁ ABIERTO ---
+            if (uiState.isReviewDialogOpen) {
+                AddReviewDialog(
+                    onDismiss = { viewModel.toggleReviewDialog(false) },
+                    isLoading = uiState.isSubmittingReview,
+                    onSubmit = { rating, comment, uri ->
+                        viewModel.submitReview(offerId, rating, comment, uri)
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun OfferDetailContent(offer: com.dsm.munaytripandroid.feature.offer.domain.model.Offer) {
+fun OfferDetailContent(
+    offer: com.dsm.munaytripandroid.feature.offer.domain.model.Offer,
+    // Agregamos parámetros nuevos
+    reviews: List<Review>,
+    onAddReviewClick: () -> Unit
+) {
     LazyColumn(
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
@@ -588,6 +612,15 @@ fun OfferDetailContent(offer: com.dsm.munaytripandroid.feature.offer.domain.mode
             }
         }
 
+        item {
+            SectionCard(title = "") { // Card vacío o directo sin card
+                ReviewsSection(
+                    reviews = reviews,
+                    onAddReviewClick = onAddReviewClick
+                )
+            }
+        }
+
         // Espacio final
         item {
             Spacer(modifier = Modifier.height(80.dp))
@@ -657,6 +690,222 @@ fun SectionCard(
     }
 }
 
+// --- COMPONENTE: LISTA DE RESEÑAS (Integrar en la LazyColumn) ---
+@Composable
+fun ReviewsSection(
+    reviews: List<Review>,
+    onAddReviewClick: () -> Unit
+) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Reseñas (${reviews.size})",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            TextButton(onClick = onAddReviewClick) {
+                Text("Escribir opinión")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (reviews.isEmpty()) {
+            Text(
+                text = "Sé el primero en opinar sobre esta experiencia.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        } else {
+            reviews.forEach { review ->
+                ReviewItem(review)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+        }
+    }
+}
+
+// --- COMPONENTE: ITEM INDIVIDUAL DE RESEÑA ---
+@Composable
+fun ReviewItem(review: Review) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Avatar (Placeholder con inicial)
+            Surface(
+                shape = CircleShape,
+                color = MunaySecondary,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = review.userName.first().toString(),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(text = review.userName, fontWeight = FontWeight.Bold)
+                // En tu función ReviewItem:
+
+                RatingBar(
+                    rating = review.rating ?: 0,
+                    isEditable = false
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = review.comment, style = MaterialTheme.typography.bodyMedium)
+
+        // Imagen de la reseña (si existe)
+        if (review.imageUrl != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            AsyncImage(
+                model = review.imageUrl,
+                contentDescription = "Foto de reseña",
+                modifier = Modifier
+                    .height(150.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.LightGray),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+            )
+        }
+    }
+}
+
+// --- COMPONENTE: DIÁLOGO PARA AGREGAR RESEÑA ---
+@Composable
+fun AddReviewDialog(
+    onDismiss: () -> Unit,
+    onSubmit: (Int, String, Uri?) -> Unit,
+    isLoading: Boolean
+) {
+    var rating by remember { mutableIntStateOf(5) }
+    var comment by remember { mutableStateOf("") }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Selector de fotos moderno
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> selectedImageUri = uri }
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cuéntanos tu experiencia") },
+        text = {
+            Column {
+                // Selector de Estrellas
+                Text("Calificación:", style = MaterialTheme.typography.labelLarge)
+                RatingBar(
+                    rating = rating,
+                    isEditable = true,
+                    onRatingChanged = { rating = it },
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                // Campo de Texto
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    label = { Text("Tu comentario") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 4
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Selector de Imagen
+                if (selectedImageUri != null) {
+                    Box {
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                        // Botón para quitar imagen
+                        IconButton(
+                            onClick = { selectedImageUri = null },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .background(Color.White, CircleShape)
+                                .size(24.dp)
+                        ) {
+                            Icon(Icons.Default.Close, null, modifier = Modifier.padding(4.dp))
+                        }
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = {
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.AddPhotoAlternate, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Agregar Foto")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSubmit(rating, comment, selectedImageUri) },
+                enabled = !isLoading && comment.isNotBlank()
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                } else {
+                    Text("Publicar")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
+}
+
+// --- UTILITY: BARRA DE ESTRELLAS ---
+@Composable
+fun RatingBar(
+    rating: Int,
+    modifier: Modifier = Modifier,
+    isEditable: Boolean = false,
+    onRatingChanged: ((Int) -> Unit)? = null
+) {
+    Row(modifier = modifier) {
+        for (i in 1..5) {
+            val icon = if (i <= rating) Icons.Default.Star else Icons.Default.StarBorder
+            val tint = if (i <= rating) Color(0xFFFFC107) else Color.Gray
+
+            if (isEditable && onRatingChanged != null) {
+                IconButton(onClick = { onRatingChanged(i) }, modifier = Modifier.size(32.dp)) {
+                    Icon(imageVector = icon, contentDescription = null, tint = tint)
+                }
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = tint,
+                    modifier = Modifier.size(if (isEditable) 32.dp else 16.dp)
+                )
+            }
+        }
+    }
+}
 
 /**
  * CARACTERÍSTICAS DE OFFERDETAILSCREEN:

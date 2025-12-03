@@ -86,3 +86,13 @@ enum class OfferType(val displayName: String) {
     EXPERIENCE("Experiencia"),  // Talleres, actividades
     SERVICE("Servicio")  // Servicios generales
 }
+
+data class Review(
+    val id: String = "",
+    val userId: String = "",
+    val userName: String = "Usuario Munay",
+    val rating: Int? = null,
+    val comment: String = "",
+    val imageUrl: String? = null, // URL de la imagen en Storage
+    val timestamp: Long = System.currentTimeMillis()
+)
