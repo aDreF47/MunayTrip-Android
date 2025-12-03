@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <!-- Tema principal de la app -->
     <style name="Theme.MunayTripAndroid" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Tema de Splash -->
+    <style name="Theme.MunayTrip.Splash" parent="Theme.SplashScreen">
+        <!-- Fondo de la ventana -->
+        <item name="windowSplashScreenBackground">@color/white</item>
+
+        <!-- Ícono animado o estático -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+
+        <!-- Color de fondo del ícono -->
+        <item name="windowSplashScreenIconBackgroundColor">@color/purple_200</item>
+
+        <!-- Duración de la animación (solo Android 12) -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+    </style>
 </resources>
