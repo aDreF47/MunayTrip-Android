@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,31 +25,59 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.dsm.munaytripandroid.feature.offer.domain.model.Offer
 import com.dsm.munaytripandroid.feature.offer.domain.model.OfferCategory
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OffersListScreen(
     viewModel: OffersListViewModel = viewModel(),
     onOfferClick: (String) -> Unit,
-    onSearchClick: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ofertas Disponibles") },
+                title = {
+                    if (isSearchActive) {
+                        TextField(
+                            value = searchQuery,
+                            onValueChange = {
+                                searchQuery = it
+                                viewModel.searchOffers(it) // ← Nueva función en ViewModel
+                            },
+                            placeholder = { Text("Buscar ofertas...") },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.White,
+                                unfocusedIndicatorColor = Color.White.copy(0.5f)
+                            ),
+                            textStyle = LocalTextStyle.current.copy(color = Color.White)
+                        )
+                    } else {
+                        Text("Ofertas Disponibles")
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (isSearchActive) {
+                            isSearchActive = false
+                            searchQuery = ""
+                            viewModel.searchOffers("") // Limpia búsqueda
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            if (isSearchActive) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = if (isSearchActive) "Cerrar búsqueda" else "Volver"
                         )
                     }
                 },
                 actions = {
-                    IconButton(onClick = onSearchClick) {
+                    IconButton(onClick = { isSearchActive = !isSearchActive }) {
                         Icon(Icons.Default.Search, "Buscar")
                     }
                 },
@@ -92,12 +121,21 @@ fun OffersListScreen(
             HorizontalDivider()
 
             // Lista de ofertas
-            if (uiState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+            if (!uiState.isLoading && uiState.filteredOffers.isNotEmpty()) {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    CircularProgressIndicator(color = Color(0xFF1A7FA6))
+                    items(uiState.filteredOffers) { offer ->
+                        OfferCard(
+                            offer = offer,
+                            onClick = {
+                                // ✅ Por ahora pasa solo el offerId
+                                // searchTerm será null (porque no hay búsqueda activa)
+                                onOfferClick(offer.offerId)
+                            }
+                        )
+                    }
                 }
             } else if (uiState.filteredOffers.isEmpty()) {
                 Box(

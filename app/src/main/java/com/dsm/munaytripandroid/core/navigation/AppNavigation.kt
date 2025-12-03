@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.dsm.munaytripandroid.feature.Foot.FootScreen
+import com.dsm.munaytripandroid.feature.analytics.presentation.ProviderDashboardScreen
 import com.dsm.munaytripandroid.feature.onboarding.presentation.splash.SplashScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.login.LoginScreen
 import com.dsm.munaytripandroid.feature.auth.presentation.register.RegisterScreen
@@ -151,7 +152,7 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                     navController.navigate(OffersList)
                 },
                 onNavigateToOfferDetail = { offerId ->
-                    navController.navigate(OfferDetail(offerId))
+                    navController.navigate(OfferDetail(offerId, searchTerm = null))
                 },
                 onNavigateToFoots = {
                     navController.navigate(Foot)
@@ -184,6 +185,9 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
                 onNavigateToOfferDetail = { offerId ->
                     navController.navigate(OfferDetail(offerId))
                 },
+                onNavigateToAnalytics = {  // ✅ AGREGAR ESTA LÍNEA
+                    navController.navigate(ProviderAnalytics)
+                },
                 onLogout = {
                     auth.signOut()
                     navController.navigate(Initial) {
@@ -193,14 +197,24 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
             )
         }
 
+        // ========== PROVIDER ANALYTICS (NUEVO) ==========
+        composable<ProviderAnalytics> {
+            val currentUser = auth.currentUser
+            if (currentUser != null) {
+                ProviderDashboardScreen(
+                    providerId = currentUser.uid,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+        }
+
         // ========== OFFERS LIST (Clients) ==========
         composable<OffersList> {
             OffersListScreen(
                 onOfferClick = { offerId ->
                     navController.navigate(OfferDetail(offerId))
-                },
-                onSearchClick = {
-                    // TODO: Implementar búsqueda
                 },
                 onNavigateBack = {
                     navController.popBackStack()
@@ -213,6 +227,7 @@ fun AppNavigation(navController: NavHostController, auth: FirebaseAuth) {
             val offerDetail: OfferDetail = backStackEntry.toRoute()
             OfferDetailScreen(
                 offerId = offerDetail.offerId,
+                searchTerm = offerDetail.searchTerm, // ✅ Pasar el searchTerm (puede ser null)
                 onNavigateBack = {
                     navController.popBackStack()
                 },

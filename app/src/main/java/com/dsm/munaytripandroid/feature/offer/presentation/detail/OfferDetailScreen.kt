@@ -43,16 +43,36 @@ private val MunaySecondary = Color(0xFF4DB6E8)
 @Composable
 fun OfferDetailScreen(
     offerId: String,
+    searchTerm: String?, // <--- 1. Recibe el searchTerm como parámetro (puede ser null)
     viewModel: OfferDetailViewModel = viewModel(),
     onNavigateBack: () -> Unit,
     onBookOffer: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Cargar reviews al iniciar
+    // Cargar datos iniciales
     LaunchedEffect(offerId) {
         viewModel.loadOffer(offerId)
-        viewModel.loadReviews(offerId) // <--- NUEVO
+        viewModel.loadReviews(offerId)
+    }
+
+    // --- LÓGICA DE ANALYTICS MEJORADA ---
+    DisposableEffect(offerId) {
+        // A. CÓDIGO DE ENTRADA (Se ejecuta al abrir la pantalla)
+        val startTime = System.currentTimeMillis()
+
+        // Registramos la entrada (timeSpent será 0, pero guardamos el ID)
+        viewModel.logViewInteraction(offerId, searchTerm)
+
+        // B. CÓDIGO DE SALIDA (Se ejecuta al salir/cerrar la pantalla)
+        onDispose {
+            val endTime = System.currentTimeMillis()
+            // Calculamos la diferencia en segundos
+            val durationSeconds = (endTime - startTime) / 1000
+
+            // Actualizamos el documento en Firestore
+            viewModel.updateInteractionTime(durationSeconds)
+        }
     }
 
     Scaffold(

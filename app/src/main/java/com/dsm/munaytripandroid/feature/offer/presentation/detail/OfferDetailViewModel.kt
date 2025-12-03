@@ -1,8 +1,11 @@
 package com.dsm.munaytripandroid.feature.offer.presentation.detail
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dsm.munaytripandroid.feature.analytics.data.repository.AnalyticsRepository
+import com.dsm.munaytripandroid.feature.analytics.data.repository.AnalyticsRepositoryImpl
 import com.dsm.munaytripandroid.feature.bookings.data.repository.BookingRepositoryImpl
 import com.dsm.munaytripandroid.feature.bookings.data.repository.FavoritesRepositoryImpl
 import com.dsm.munaytripandroid.feature.bookings.domain.repository.BookingRepository
@@ -24,6 +27,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.dsm.munaytripandroid.feature.analytics.domain.model.Interaction
+import com.dsm.munaytripandroid.feature.analytics.domain.model.InteractionMetadata
+import com.google.firebase.Timestamp
+import kotlinx.coroutines.Dispatchers
 
 class OfferDetailViewModel : ViewModel() {
 
@@ -38,6 +45,11 @@ class OfferDetailViewModel : ViewModel() {
     val uiState: StateFlow<OfferDetailUiState> = _uiState.asStateFlow()
 
     private val currentUser = FirebaseAuth.getInstance().currentUser
+
+    // ✅ AGREGAR: Variable para guardar el ID de la interacción actual
+    private var currentInteractionId: String? = null
+
+    private val analyticsRepository: AnalyticsRepository = AnalyticsRepositoryImpl()
 
     fun loadOffer(offerId: String) {
         viewModelScope.launch {
@@ -140,6 +152,8 @@ class OfferDetailViewModel : ViewModel() {
                         status = "confirmed"
                     )
 
+                    analyticsRepository.incrementBooking(offer.offerId)
+
                     val updatedOffer = offer.copy(
                         cuposDisponibles = offer.cuposDisponibles - 1
                     )
@@ -237,8 +251,61 @@ class OfferDetailViewModel : ViewModel() {
             }
         }
     }
-}
 
+    fun logViewInteraction(offerId: String, searchTerm: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentUser = Firebase.auth.currentUser
+
+            // Si no hay usuario, quizás quieras registrarlo como "anónimo" o simplemente no registrar
+            val userId = currentUser?.uid ?: "anon_user"
+
+            // Generamos una referencia para tener el ID
+            val docRef = Firebase.firestore.collection("interactions").document()
+
+            // ✅ GUARDAMOS el ID para poder actualizarlo después
+            currentInteractionId = docRef.id
+
+            // Simulamos una sesión (esto idealmente viene de un gestor de sesiones global)
+            val currentSessionId = "sess_${System.currentTimeMillis()}"
+
+            val interaction = Interaction(
+                interactionId = docRef.id,
+                userId = userId,
+                offerId = offerId,
+                tipo = "view",
+                sessionId = currentSessionId,
+                metadata = InteractionMetadata(
+                    source = if (searchTerm != null) "search_results" else "direct_link",
+                    searchTerm = searchTerm, // Ahora sí existe
+                    timeSpent = 0,
+                    imagesViewed = emptyList()
+                ),
+                timestamp = Timestamp.now()
+            )
+
+            docRef.set(interaction).await()
+            Log.d("Analytics", "Interacción registrada: ${docRef.id}")
+            analyticsRepository.incrementView(offerId, searchTerm)
+        }
+    }
+
+    // NUEVA FUNCIÓN: Se llama cuando el usuario sale de la pantalla
+    fun updateInteractionTime(seconds: Long) {
+        val docId = currentInteractionId ?: return // Si no hay ID, no hacemos nada
+
+        viewModelScope.launch(Dispatchers.IO) {
+            // Actualizamos SOLO el campo timeSpent del documento existente
+            Firebase.firestore.collection("interactions").document(docId)
+                .update("metadata.timeSpent", seconds)
+                .addOnSuccessListener {
+                    Log.d("Analytics", "Tiempo actualizado: $seconds segundos")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("Analytics", "Error al actualizar tiempo: ${e.message}")
+                }
+        }
+    }
+    }
 data class OfferDetailUiState(
     val offer: Offer? = null,
     val isLoading: Boolean = false,

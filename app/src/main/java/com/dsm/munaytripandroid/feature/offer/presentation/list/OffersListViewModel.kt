@@ -9,7 +9,9 @@ import com.dsm.munaytripandroid.feature.offer.domain.repository.OfferRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
 
 class OffersListViewModel : ViewModel() {
 
@@ -51,14 +53,36 @@ class OffersListViewModel : ViewModel() {
         )
     }
 
+    // En OffersListViewModel
     fun searchOffers(query: String) {
-        viewModelScope.launch {
-            if (query.isBlank()) {
-                _uiState.value = _uiState.value.copy(filteredOffers = _uiState.value.offers)
+        _uiState.update { currentState ->
+            val filtered = if (query.isBlank()) {
+                // Si no hay búsqueda, aplica solo filtro de categoría
+                if (currentState.selectedCategory == null) {
+                    currentState.offers  // ✅ CAMBIAR: allOffers → offers
+                } else {
+                    currentState.offers.filter {  // ✅ CAMBIAR: allOffers → offers
+                        it.categoria.name.lowercase() == currentState.selectedCategory
+                    }
+                }
             } else {
-                val results = offerRepository.searchOffers(query)
-                _uiState.value = _uiState.value.copy(filteredOffers = results)
+                // Busca en título, descripción y etiquetas
+                currentState.offers.filter { offer ->  // ✅ CAMBIAR: allOffers → offers
+                    val matchesSearch = offer.titulo.contains(query, ignoreCase = true) ||
+                            offer.descripcionCorta.contains(query, ignoreCase = true) ||
+                            offer.etiquetas.any { it.contains(query, ignoreCase = true) }
+
+                    val matchesCategory = currentState.selectedCategory == null ||
+                            offer.categoria.name.lowercase() == currentState.selectedCategory
+
+                    matchesSearch && matchesCategory
+                }
             }
+
+            currentState.copy(
+                filteredOffers = filtered,
+                searchQuery = query
+            )
         }
     }
 }
@@ -67,5 +91,7 @@ data class OffersListUiState(
     val offers: List<Offer> = emptyList(),
     val filteredOffers: List<Offer> = emptyList(),
     val selectedCategory: String? = null,
-    val isLoading: Boolean = false
+    val searchQuery: String = "", // ← AGREGAR
+    val isLoading: Boolean = true,
+    val error: String? = null
 )

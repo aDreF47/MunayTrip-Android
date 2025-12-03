@@ -35,13 +35,19 @@ object ClientHome
 @Serializable
 object ProviderHome
 
+
+// ==================== ANALYTICS (Provider) ====================
+@Serializable
+object ProviderAnalytics
+
 // ==================== OFFERS (Client View) ====================
 @Serializable
 object OffersList  // Lista de todas las ofertas (para clients)
 
 @Serializable
 data class OfferDetail(
-    val offerId: String
+    val offerId: String,
+    val searchTerm: String? = null
 )
 
 // ==================== OFFERS (Provider View) ====================

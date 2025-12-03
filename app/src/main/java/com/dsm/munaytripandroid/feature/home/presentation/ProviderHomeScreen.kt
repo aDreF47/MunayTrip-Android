@@ -36,6 +36,7 @@ fun ProviderHomeScreen(
     onNavigateToMyOffers: () -> Unit,
     onNavigateToCreateOffer: () -> Unit,
     onNavigateToOfferDetail: (String) -> Unit,
+    onNavigateToAnalytics: () -> Unit,
     onLogout: () -> Unit
 ) {
     val currentUser = auth.currentUser
@@ -111,7 +112,7 @@ fun ProviderHomeScreen(
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
+                    onClick = onNavigateToAnalytics,
                     icon = { Icon(Icons.Default.Analytics, "Analytics") },
                     label = { Text("Analytics") }
                 )
@@ -222,36 +223,19 @@ fun ProviderHomeScreen(
                 }
             }
 
-            // Stats Placeholder
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "📊 Estadísticas Rápidas",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        StatItem("Ofertas Activas", "$statsOfertasActivas")
-                        StatItem("Vistas Totales", "$statsVistasTotales")
-                        StatItem("Reservas", "$statsReservas")
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                    // --- GRÁFICO DE BARRAS AÑADIDO ---
-                    StatsBarChart(
-                        ofertas = statsOfertasActivas.toFloat(),
-                        vistas = statsVistasTotales.toFloat(),
-                        reservas = statsReservas.toFloat()
-                    )
+            // ✅ NUEVA TARJETA DE ANALYTICS
+            Card(
+                onClick = onNavigateToAnalytics,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(Icons.Default.BarChart, "Analytics")
+                    Text("Ver estadísticas")
                 }
             }
 
