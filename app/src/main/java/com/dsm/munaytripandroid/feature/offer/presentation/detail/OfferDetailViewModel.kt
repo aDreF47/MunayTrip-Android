@@ -254,38 +254,45 @@ class OfferDetailViewModel : ViewModel() {
 
     fun logViewInteraction(offerId: String, searchTerm: String?) {
         viewModelScope.launch(Dispatchers.IO) {
-            val currentUser = Firebase.auth.currentUser
+            try {
+                val currentUser = Firebase.auth.currentUser
 
-            // Si no hay usuario, quizás quieras registrarlo como "anónimo" o simplemente no registrar
-            val userId = currentUser?.uid ?: "anon_user"
+                // Si no hay usuario, quizás quieras registrarlo como "anónimo" o simplemente no registrar
+                val userId = currentUser?.uid ?: "anon_user"
 
-            // Generamos una referencia para tener el ID
-            val docRef = Firebase.firestore.collection("interactions").document()
+                // Generamos una referencia para tener el ID
+                val docRef = Firebase.firestore.collection("interactions").document()
 
-            // ✅ GUARDAMOS el ID para poder actualizarlo después
-            currentInteractionId = docRef.id
+                // ✅ GUARDAMOS el ID para poder actualizarlo después
+                currentInteractionId = docRef.id
 
-            // Simulamos una sesión (esto idealmente viene de un gestor de sesiones global)
-            val currentSessionId = "sess_${System.currentTimeMillis()}"
+                // Simulamos una sesión (esto idealmente viene de un gestor de sesiones global)
+                val currentSessionId = "sess_${System.currentTimeMillis()}"
 
-            val interaction = Interaction(
-                interactionId = docRef.id,
-                userId = userId,
-                offerId = offerId,
-                tipo = "view",
-                sessionId = currentSessionId,
-                metadata = InteractionMetadata(
-                    source = if (searchTerm != null) "search_results" else "direct_link",
-                    searchTerm = searchTerm, // Ahora sí existe
-                    timeSpent = 0,
-                    imagesViewed = emptyList()
-                ),
-                timestamp = Timestamp.now()
-            )
+                val interaction = Interaction(
+                    interactionId = docRef.id,
+                    userId = userId,
+                    offerId = offerId,
+                    tipo = "view",
+                    sessionId = currentSessionId,
+                    metadata = InteractionMetadata(
+                        source = if (searchTerm != null) "search_results" else "direct_link",
+                        searchTerm = searchTerm, // Ahora sí existe
+                        timeSpent = 0,
+                        imagesViewed = emptyList()
+                    ),
+                    timestamp = Timestamp.now()
+                )
 
-            docRef.set(interaction).await()
-            Log.d("Analytics", "Interacción registrada: ${docRef.id}")
-            analyticsRepository.incrementView(offerId, searchTerm)
+                docRef.set(interaction).await()
+                Log.d("Analytics", "Interacción registrada: ${docRef.id}")
+                analyticsRepository.incrementView(offerId, searchTerm)
+
+                Log.d("Analytics", "✅ Vista registrada para oferta: $offerId")
+
+            } catch (e: Exception) {
+                Log.e("Analytics", "❌ Error al registrar vista: ${e.message}")
+            }
         }
     }
 
@@ -305,7 +312,10 @@ class OfferDetailViewModel : ViewModel() {
                 }
         }
     }
-    }
+
+
+
+}
 data class OfferDetailUiState(
     val offer: Offer? = null,
     val isLoading: Boolean = false,

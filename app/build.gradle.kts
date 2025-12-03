@@ -95,6 +95,15 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:19.2.0")
     implementation(libs.places)
 
+    // Vico - Librería moderna de gráficos para Compose
+    implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.28")
+    implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.28")
+    implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.28")
+
+    // O la versión estable más reciente:
+    // implementation("com.patrykandpatrick.vico:compose:1.15.0")
+    // implementation("com.patrykandpatrick.vico:compose-m3:1.15.0")
+
 
     implementation(libs.coil.compose)
     implementation("com.google.android.gms:play-services-auth:21.2.0")
