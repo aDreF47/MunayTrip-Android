@@ -25,6 +25,7 @@ material3 = "1.4.0"
 ui = "1.9.4"
 uiVersion = "1.9.5"
 roomKtx = "2.8.4"
+coilCompose = "2.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,7 +46,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 
 
-
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 androidx-navigation-compose = {module = "androidx.navigation:navigation-compose" , version.ref = "navigationCompose"}
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-storage = { module = "com.google.firebase:firebase-storage" }

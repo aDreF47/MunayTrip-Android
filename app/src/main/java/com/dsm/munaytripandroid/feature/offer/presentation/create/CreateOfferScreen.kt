@@ -1,7 +1,14 @@
 package com.dsm.munaytripandroid.feature.offer.presentation.create
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -9,15 +16,19 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.dsm.munaytripandroid.feature.offer.domain.model.OfferCategory
 import com.dsm.munaytripandroid.feature.offer.domain.model.OfferHorario
 import com.dsm.munaytripandroid.feature.offer.domain.model.OfferType
@@ -39,6 +50,15 @@ fun CreateOfferScreen(
     var showHorarioDialog by remember { mutableStateOf(false) }
     var showIncluyeDialog by remember { mutableStateOf(false) }
     var showRecomendacionDialog by remember { mutableStateOf(false) }
+
+    // Launcher para seleccionar imágenes
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            viewModel.onImagesSelected(uris)
+        }
+    }
 
     // Observar éxito
     LaunchedEffect(createSuccess) {
@@ -72,6 +92,139 @@ fun CreateOfferScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
+
+            // Sección: Imágenes
+            SectionHeader("📷 Imágenes de la Oferta")
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF5F9FB)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Agrega hasta 5 imágenes de tu oferta",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Mostrar imágenes seleccionadas
+                    if (uiState.selectedImageUris.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            uiState.selectedImageUris.forEachIndexed { index, uri ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .border(
+                                            width = 2.dp,
+                                            color = MunayPrimary.copy(alpha = 0.3f),
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                ) {
+                                    AsyncImage(
+                                        model = uri,
+                                        contentDescription = "Imagen ${index + 1}",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+
+                                    // Botón eliminar
+                                    IconButton(
+                                        onClick = { viewModel.removeImage(index) },
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .size(32.dp)
+                                    ) {
+                                        Surface(
+                                            shape = RoundedCornerShape(16.dp),
+                                            color = MaterialTheme.colorScheme.error
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = "Eliminar",
+                                                modifier = Modifier
+                                                    .padding(4.dp)
+                                                    .size(16.dp),
+                                                tint = Color.White
+                                            )
+                                        }
+                                    }
+
+                                    // Indicador de imagen principal
+                                    if (index == 0) {
+                                        Surface(
+                                            modifier = Modifier
+                                                .align(Alignment.BottomStart)
+                                                .padding(4.dp),
+                                            color = MunayPrimary,
+                                            shape = RoundedCornerShape(4.dp)
+                                        ) {
+                                            Text(
+                                                text = "Principal",
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    // Botón para agregar imágenes
+                    OutlinedButton(
+                        onClick = { imagePickerLauncher.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !uiState.isLoading && uiState.selectedImageUris.size < 5
+                    ) {
+                        Icon(Icons.Default.Image, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            if (uiState.selectedImageUris.isEmpty())
+                                "Seleccionar imágenes (Máx. 5)"
+                            else
+                                "Agregar más imágenes (${uiState.selectedImageUris.size}/5)"
+                        )
+                    }
+
+                    // Mostrar estado de carga de imágenes
+                    if (uiState.isUploadingImages) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Subiendo imágenes... ${uiState.uploadProgress}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MunayPrimary
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Sección: Información Básica
             SectionHeader("📝 Información Básica")
@@ -255,6 +408,8 @@ fun CreateOfferScreen(
                 enabled = !uiState.isLoading,
                 placeholder = { Text("Ej: 2 horas, 3 días") }
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -602,7 +757,7 @@ fun CreateOfferScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = !uiState.isLoading,
+                enabled = !uiState.isLoading && !uiState.isUploadingImages,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MunayPrimary
                 )
@@ -800,6 +955,7 @@ fun CreateOfferScreen(
         )
     }
 }
+
 
 @Composable
 fun SectionHeader(text: String) {

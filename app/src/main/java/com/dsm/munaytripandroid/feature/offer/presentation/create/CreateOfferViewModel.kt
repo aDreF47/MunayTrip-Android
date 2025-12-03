@@ -1,5 +1,6 @@
 package com.dsm.munaytripandroid.feature.offer.presentation.create
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dsm.munaytripandroid.core.util.Result
@@ -7,10 +8,14 @@ import com.dsm.munaytripandroid.feature.offer.data.remote.OfferFirestoreDataSour
 import com.dsm.munaytripandroid.feature.offer.data.repository.OfferRepositoryImpl
 import com.dsm.munaytripandroid.feature.offer.domain.model.*
 import com.dsm.munaytripandroid.feature.offer.domain.repository.OfferRepository
+import com.google.firebase.Firebase
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 class CreateOfferViewModel : ViewModel() {
 
@@ -18,11 +23,63 @@ class CreateOfferViewModel : ViewModel() {
         OfferFirestoreDataSource()
     )
 
+    private val storage = Firebase.storage
+
     private val _uiState = MutableStateFlow(CreateOfferUiState())
     val uiState: StateFlow<CreateOfferUiState> = _uiState.asStateFlow()
 
     private val _createSuccess = MutableStateFlow<String?>(null)
     val createSuccess: StateFlow<String?> = _createSuccess.asStateFlow()
+
+    // Manejo de imágenes
+    fun onImagesSelected(uris: List<Uri>) {
+        val currentImages = _uiState.value.selectedImageUris
+        val newImages = (currentImages + uris).take(5) // Máximo 5 imágenes
+        _uiState.value = _uiState.value.copy(selectedImageUris = newImages)
+    }
+
+    fun removeImage(index: Int) {
+        val images = _uiState.value.selectedImageUris.toMutableList()
+        images.removeAt(index)
+        _uiState.value = _uiState.value.copy(selectedImageUris = images)
+    }
+
+    private suspend fun uploadImages(uris: List<Uri>): Pair<List<String>, List<String>> {
+        val imageUrls = mutableListOf<String>()
+        val thumbnailUrls = mutableListOf<String>()
+
+        _uiState.value = _uiState.value.copy(isUploadingImages = true, uploadProgress = 0)
+
+        uris.forEachIndexed { index, uri ->
+            try {
+                val filename = "offers/${UUID.randomUUID()}.jpg"
+                val thumbnailFilename = "thumbnails/$filename"
+
+                // Subir imagen original
+                val imageRef = storage.reference.child(filename)
+                imageRef.putFile(uri).await()
+                val imageUrl = imageRef.downloadUrl.await().toString()
+                imageUrls.add(imageUrl)
+
+                // Subir thumbnail (en producción, deberías redimensionar la imagen primero)
+                val thumbnailRef = storage.reference.child(thumbnailFilename)
+                thumbnailRef.putFile(uri).await()
+                val thumbnailUrl = thumbnailRef.downloadUrl.await().toString()
+                thumbnailUrls.add(thumbnailUrl)
+
+                // Actualizar progreso
+                val progress = ((index + 1) * 100) / uris.size
+                _uiState.value = _uiState.value.copy(uploadProgress = progress)
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Continuar con las demás imágenes aunque falle una
+            }
+        }
+
+        _uiState.value = _uiState.value.copy(isUploadingImages = false, uploadProgress = 0)
+        return Pair(imageUrls, thumbnailUrls)
+    }
 
     // Actions - Información básica
     fun onTituloChange(titulo: String) {
@@ -215,43 +272,68 @@ class CreateOfferViewModel : ViewModel() {
                 _uiState.value = state.copy(errorMessage = "Los cupos disponibles no pueden ser mayores a la capacidad máxima")
                 return
             }
+            state.selectedImageUris.isEmpty() -> {
+                _uiState.value = state.copy(errorMessage = "Debes agregar al menos una imagen")
+                return
+            }
         }
 
         viewModelScope.launch {
             _uiState.value = state.copy(isLoading = true)
 
-            val offer = Offer(
-                titulo = state.titulo,
-                descripcionCorta = state.descripcionCorta,
-                descripcionLarga = state.descripcionLarga.ifBlank { state.descripcionCorta },
-                categoria = state.categoria,
-                tipoOferta = state.tipoOferta,
-                precio = state.precio,
-                esGratis = state.esGratis,
-                descuento = state.descuento,
-                capacidadMaxima = state.capacidadMaxima,
-                cuposDisponibles = state.cuposDisponibles,
-                ubicacion = state.ubicacion,
-                duracion = state.duracion,
-                horarios = state.horarios,
-                etiquetas = state.etiquetas,
-                incluye = state.incluye,
-                recomendaciones = state.recomendaciones,
-                instruccionesPago = state.instruccionesPago
-            )
+            try {
+                // Subir imágenes primero
+                val (imageUrls, thumbnailUrls) = uploadImages(state.selectedImageUris)
 
-            when (val result = offerRepository.createOffer(offer, providerId)) {
-                is Result.Success -> {
-                    _uiState.value = state.copy(isLoading = false)
-                    _createSuccess.value = result.data
-                }
-                is Result.Error -> {
+                if (imageUrls.isEmpty()) {
                     _uiState.value = state.copy(
                         isLoading = false,
-                        errorMessage = result.exception.message ?: "Error al crear oferta"
+                        errorMessage = "Error al subir las imágenes. Intenta de nuevo."
                     )
+                    return@launch
                 }
-                is Result.Loading -> {}
+
+                // Crear la oferta con las URLs de las imágenes
+                val offer = Offer(
+                    titulo = state.titulo,
+                    descripcionCorta = state.descripcionCorta,
+                    descripcionLarga = state.descripcionLarga.ifBlank { state.descripcionCorta },
+                    categoria = state.categoria,
+                    tipoOferta = state.tipoOferta,
+                    precio = state.precio,
+                    esGratis = state.esGratis,
+                    descuento = state.descuento,
+                    capacidadMaxima = state.capacidadMaxima,
+                    cuposDisponibles = state.cuposDisponibles,
+                    ubicacion = state.ubicacion,
+                    duracion = state.duracion,
+                    horarios = state.horarios,
+                    etiquetas = state.etiquetas,
+                    incluye = state.incluye,
+                    recomendaciones = state.recomendaciones,
+                    instruccionesPago = state.instruccionesPago,
+                    imageUrls = imageUrls,
+                    thumbnailUrls = thumbnailUrls
+                )
+
+                when (val result = offerRepository.createOffer(offer, providerId)) {
+                    is Result.Success -> {
+                        _uiState.value = state.copy(isLoading = false)
+                        _createSuccess.value = result.data
+                    }
+                    is Result.Error -> {
+                        _uiState.value = state.copy(
+                            isLoading = false,
+                            errorMessage = result.exception.message ?: "Error al crear oferta"
+                        )
+                    }
+                    is Result.Loading -> {}
+                }
+            } catch (e: Exception) {
+                _uiState.value = state.copy(
+                    isLoading = false,
+                    errorMessage = "Error inesperado: ${e.message}"
+                )
             }
         }
     }
@@ -279,7 +361,10 @@ data class CreateOfferUiState(
     val incluye: List<String> = emptyList(),
     val recomendaciones: List<String> = emptyList(),
     val instruccionesPago: String = "",
+    val selectedImageUris: List<Uri> = emptyList(),
     val isLoading: Boolean = false,
+    val isUploadingImages: Boolean = false,
+    val uploadProgress: Int = 0,
     val errorMessage: String? = null,
     val latitudInput: String = "",
     val longitudInput: String = ""
