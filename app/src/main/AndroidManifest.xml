@@ -34,6 +34,16 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- 2. AQUÍ PEGAS EL NUEVO CÓDIGO (DENTRO DE LA MISMA ACTIVITY) -->
+            <!-- Este permite abrir la app desde el link -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- AHORA USAMOS ESTE FORMATO -->
+                <data android:scheme="munaytrip" android:host="redeem" />
+            </intent-filter>
         </activity>
     </application>
 

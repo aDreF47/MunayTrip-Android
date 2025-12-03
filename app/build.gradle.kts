@@ -110,6 +110,7 @@ dependencies {
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.compose.ui)
     implementation("com.github.tehras:charts:0.2.4-alpha")
+    implementation(libs.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

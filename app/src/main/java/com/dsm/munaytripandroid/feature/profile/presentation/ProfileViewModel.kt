@@ -37,6 +37,10 @@ class ProfileViewModel : ViewModel() {
 
     var isClient by mutableStateOf(false)
 
+    // NUEVO: Controla si se muestra el diálogo de "Felicidades"
+    var showSuccessDialog by mutableStateOf(false)
+    // NUEVO: Guarda cuántos puntos se ganaron para mostrarlos en el diálogo
+    var lastPointsEarned by mutableStateOf(0)
     init {
         listenToUserPoints()
     }
@@ -68,6 +72,7 @@ class ProfileViewModel : ViewModel() {
             }
     }
 
+
     // Esta función se llama cuando el MainActivity detecta el Deep Link
     fun redeemPoints(code: String) {
         viewModelScope.launch {
@@ -76,35 +81,40 @@ class ProfileViewModel : ViewModel() {
             val userRef = db.collection("users").document(userId)
 
             try {
-                db.runTransaction { transaction ->
+                // 1. Ejecutamos la transacción y esperamos (.await()) el resultado (Int)
+                val earnedAmount = db.runTransaction { transaction ->
                     val snapshot = transaction.get(tokenRef)
                     val status = snapshot.getString("status")
                     val points = snapshot.getLong("pointsAmount") ?: 0
 
                     if (status == "PENDING") {
-                        // 1. Marcar código como usado
                         transaction.update(tokenRef, "status", "REDEEMED")
                         transaction.update(tokenRef, "redeemedBy", userId)
                         transaction.update(tokenRef, "redeemedAt", FieldValue.serverTimestamp())
 
-                        // 2. Sumar puntos al usuario (CREACIÓN AUTOMÁTICA)
-                        // Usamos set() con SetOptions.merge() en lugar de update().
-                        // Esto asegura que si el documento del usuario o el campo "points"
-                        // NO existen, se creen en este momento sin dar error.
                         val updateData = mapOf("points" to FieldValue.increment(points))
                         transaction.set(userRef, updateData, SetOptions.merge())
 
+                        // Retornamos los puntos (esto será el resultado de runTransaction)
+                        points.toInt()
                     } else {
                         throw Exception("Código ya usado o inválido")
                     }
-                }.await()
+                }.await() // <--- ¡ESTO FALTABA! Convierte Task<Int> en Int
 
+                // 2. Ahora earnedAmount es un Int válido, podemos asignarlo
+                lastPointsEarned = earnedAmount
+                showSuccessDialog = true
                 redeemStatus = "¡Puntos canjeados con éxito!"
 
             } catch (e: Exception) {
                 redeemStatus = "Error: ${e.message}"
             }
         }
+    }
+
+    fun dismissDialog() {
+        showSuccessDialog = false
     }
     private val authRepository = AuthRepositoryImpl(
         FirebaseAuthDataSource(),

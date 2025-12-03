@@ -1,5 +1,6 @@
 package com.dsm.munaytripandroid.feature.offer.presentation.provider
 
+import android.app.Activity
 import android.content.Intent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +54,7 @@ class MyOffersViewModel : ViewModel() {
                 db.collection("puntos_tokens").document(tokenId).set(tokenData).await()
 
                 // Construimos el link
-                val deepLink = "https://tuaapdeturismo.com/redeem?code=$tokenId"
+                val deepLink = "munaytrip://redeem?code=$tokenId"
 
                 // Intent para compartir (WhatsApp, Telegram, etc.)
                 // CAMBIO: offer.title -> offer.titulo

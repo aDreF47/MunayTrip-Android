@@ -1,6 +1,7 @@
 package com.dsm.munaytripandroid.feature.Foot
 
 import android.R.attr.radius
+import android.widget.Toast
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,7 +19,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -25,13 +30,91 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlin.io.path.Path
+import kotlin.io.path.moveTo
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
 // --- Colores de tu proyecto (Basado en la imagen) ---
 private val MunayPrimary = Color(0xFF1A7FA6) // Color principal de ejemplo
 private val MunaySecondary = Color(0xFF4D6BE8) // Color secundario de ejemplo
+
+// --- 1. ViewModel para la Lógica de Puntos ---
+class FootViewModel : ViewModel() {
+    private val db = Firebase.firestore
+    private val auth = Firebase.auth
+
+    // Estado de los puntos del usuario
+    var userPoints by mutableStateOf(0)
+        private set
+
+    init {
+        listenToUserPoints()
+    }
+
+    private fun listenToUserPoints() {
+        val userId = auth.currentUser?.uid ?: return
+        db.collection("users").document(userId)
+            .addSnapshotListener { snapshot, e ->
+                if (e == null && snapshot != null && snapshot.exists()) {
+                    userPoints = snapshot.getLong("points")?.toInt() ?: 0
+                }
+            }
+    }
+
+    /**
+     * Intenta gastar puntos para girar la ruleta.
+     * @param cost Costo del giro (ej. 50 puntos).
+     * @param onSuccess Callback si la transacción es exitosa.
+     * @param onError Callback si no hay puntos suficientes o hay error.
+     */
+    fun spinWheel(cost: Int, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val userId = auth.currentUser?.uid
+            if (userId == null) {
+                onError("Debes iniciar sesión.")
+                return@launch
+            }
+
+            val userRef = db.collection("users").document(userId)
+
+            try {
+                db.runTransaction { transaction ->
+                    val snapshot = transaction.get(userRef)
+                    val currentPoints = snapshot.getLong("points") ?: 0
+
+                    if (currentPoints >= cost) {
+                        // CAMBIO: Calculamos el nuevo valor explícitamente para mayor seguridad
+                        val newPoints = currentPoints - cost
+                        transaction.update(userRef, "points", newPoints)
+                    } else {
+                        throw Exception("insuficientes")
+                    }
+                }.await()
+
+                // Si llegamos aquí, la transacción fue exitosa
+                onSuccess()
+
+            } catch (e: Exception) {
+                // Mensaje personalizado si el error fue por puntos
+                val msg = if (e.message?.contains("insuficientes") == true)
+                    "Necesitas $cost puntos para girar la ruleta"
+                else
+                    e.message ?: "Error al procesar puntos"
+                onError(msg)
+            }
+        }
+    }
+}
 
 // --- 1. Definición de Datos ---
 
@@ -54,7 +137,7 @@ private val prizesList = listOf(
     Prize("Ticket 2x1", Color(0xFF4CAF50), 0f, 45f),
     Prize("Descuento 50%", Color(0xFFFFC107), 45f, 45f),
     Prize("Ticket Gratis", Color(0xFFE91E63), 90f, 45f),
-    Prize("Noche de Hotel", Color(0xFF2196F3), 135f, 45f),
+    Prize("Ticket de 10%", Color(0xFF2196F3), 135f, 45f),
     Prize("Ticket de 20%", Color(0xFF9C27B0), 180f, 45f),
     Prize("Vuelva a intentarlo", Color(0xFFE91E63), 225f, 45f),
     Prize("Ticket de 20%", Color(0xFF4CAF50), 270f, 45f),
@@ -78,8 +161,9 @@ fun FootScreen(
     onNavigateBack: () -> Unit,
     onNavigateToFoots: () -> Unit,
     // Aquí iría el parámetro viewModel si lo necesitaras:
-    // viewModel: BookingsViewModel = viewModel()
+    viewModel: FootViewModel = viewModel() // Inyectamos el ViewModel aquí
 ) {
+    val context = LocalContext.current
     // --- Lógica de la Ruleta ---
     var targetRotation by remember { mutableStateOf(0f) }
     var winningPrize by remember { mutableStateOf<Prize?>(null) }
@@ -135,8 +219,12 @@ fun FootScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFF0F5F9)), // Fondo claro para resaltar la ruleta
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
+            // --- NUEVO: Tarjeta de Puntos ---
+            Spacer(modifier = Modifier.height(24.dp))
+            RoulettePointsCard(points = viewModel.userPoints)
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Gira y Gana Premios",
                 style = MaterialTheme.typography.headlineMedium,
@@ -158,11 +246,26 @@ fun FootScreen(
             Button(
                 onClick = {
                     if (!isSpinning) {
-                        isSpinning = true
-                        winningPrize = null
-                        // Generar un nuevo ángulo objetivo
-                        val randomOffset = Random.nextFloat() * 360f
-                        targetRotation += 360f * (5..10).random() + randomOffset
+                        // 1. VALIDACIÓN LOCAL INMEDIATA
+                        if (viewModel.userPoints < 50) {
+                            Toast.makeText(context, "Necesitas 50 puntos para girar la ruleta", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        // 2. LÓGICA DE GASTO DE PUNTOS (Con validación de servidor)
+                        viewModel.spinWheel(
+                            cost = 50,
+                            onSuccess = {
+                                // Si se cobró con éxito, giramos la ruleta
+                                isSpinning = true
+                                winningPrize = null
+                                val randomOffset = Random.nextFloat() * 360f
+                                targetRotation += 360f * (5..10).random() + randomOffset
+                            },
+                            onError = { errorMsg ->
+                                Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                            }
+                        )
                     }
                 },
                 enabled = !isSpinning,
@@ -194,6 +297,49 @@ fun FootScreen(
         )
     }
 }
+
+@Composable
+fun RoulettePointsCard(points: Int) {
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 32.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = Color(0xFFFFB300), // Dorado
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "TUS PUNTOS",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = points.toString(),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Black,
+                    color = MunayPrimary
+                )
+            }
+        }
+    }
+}
+
 
 /**
  * Dibuja la ruleta con sus segmentos y texto.
@@ -252,25 +398,38 @@ fun SpinningWheel(
             )
         }
 
-        // Indicador (Flecha superior que señala el resultado)
+        // 2. EL INDICADOR (FLECHA) ESTÁTICO
+        // Este Canvas NO rota, por lo que la flecha siempre apunta hacia abajo desde arriba
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val indicatorSize = 25.dp.toPx()
+            val canvasSize = size.minDimension
+            val radius = canvasSize / 2f
+            val center = Offset(size.width / 2f, size.height / 2f)
+
+            // Dibujamos una flecha (Triángulo invertido) en la parte SUPERIOR (12 en punto)
+            // que apunta hacia el centro.
+            val path = Path().apply {
+                // Punta del triángulo (hacia abajo, entrando un poco en la ruleta)
+                moveTo(center.x, center.y - radius + 40f)
+                // Esquina superior izquierda
+                lineTo(center.x - 25f, center.y - radius - 20f)
+                // Esquina superior derecha
+                lineTo(center.x + 25f, center.y - radius - 20f)
+                close()
+            }
+
+            // Relleno negro
+            drawPath(color = Color.Black, path = path)
+
+            // Borde blanco para resaltar
             drawPath(
-                color = Color.Black, // Color más oscuro para el indicador
-                path = androidx.compose.ui.graphics.Path().apply {
-                    // Flecha en la parte superior (0 grados)
-                    moveTo(center.x, center.y - radius - 5.dp.toPx()) // Mover ligeramente afuera
-                    lineTo(center.x + indicatorSize / 2f, center.y - radius + indicatorSize / 4f - 5.dp.toPx())
-                    lineTo(center.x - indicatorSize / 2f, center.y - radius + indicatorSize / 4f - 5.dp.toPx())
-                    close()
-                }
+                color = Color.White,
+                path = path,
+                style = Stroke(width = 3.dp.toPx())
             )
-            // Círculo decorativo en el centro
-            drawCircle(
-                color = MunayPrimary,
-                radius = 12.dp.toPx(),
-                center = center
-            )
+
+            // Círculo central decorativo (Estático encima de todo)
+            drawCircle(color = Color.White, radius = 18.dp.toPx(), center = center)
+            drawCircle(color = MunayPrimary, radius = 12.dp.toPx(), center = center)
         }
     }
 }
@@ -280,18 +439,20 @@ fun SpinningWheel(
  */
 @Composable
 fun PrizeDialog(prizeName: String, onDismiss: () -> Unit) {
+    val isLoss = prizeName.equals("Vuelva a intentarlo", ignoreCase = true)
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "¡PREMIO ENCONTRADO!",
+                text = if (isLoss) "Suerte para la próxima" else "¡Felicidades!",
                 fontWeight = FontWeight.Black,
                 color = MunayPrimary
             )
         },
         text = {
             Text(
-                text = "¡Felicidades! Se ha desbloqueado la zona turística: $prizeName.",
+                text = if (isLoss) "No ganaste ningún premio." else "Ganaste: $prizeName.",
                 fontSize = 18.sp
             )
         },
